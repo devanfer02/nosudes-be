@@ -6,15 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type userController struct {
+type UserController struct {
 	svc domain.UserService
 }
 
-func NewUserController(svc domain.UserService) *userController {
-	return &userController{svc}
+func NewUserController(svc domain.UserService) *UserController {
+	return &UserController{svc}
 }
 
-func(c *userController) FetchAll(ctx *gin.Context) {
+func(c *UserController) FetchAll(ctx *gin.Context) {
 	users, err := c.svc.FetchAll(ctx.Request.Context())
 	code := domain.GetCode(err)
 
@@ -26,7 +26,7 @@ func(c *userController) FetchAll(ctx *gin.Context) {
 	resp.SendResp(ctx, code, "successfully fetch data", users, nil)
 }
 
-func(c *userController) FetchByID(ctx *gin.Context) {
+func(c *UserController) FetchByID(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 
 	user, err := c.svc.FetchByID(ctx.Request.Context(), idParam)
@@ -40,12 +40,11 @@ func(c *userController) FetchByID(ctx *gin.Context) {
 	resp.SendResp(ctx, code, "successfully fetch data by id", user, nil)
 }
 
-func(c *userController) UpdateUser(ctx *gin.Context) {
+func(c *UserController) UpdateUser(ctx *gin.Context) {
 	idParam := ctx.Param("id")
-	user := domain.User{}
+	user := domain.UserPayload{}
 
-	if err := ctx.ShouldBindJSON(&user); err != nil {
-		resp.SendResp(ctx, 400, "failed to update user", nil, err)
+	if bindFailed(ctx, &user) {
 		return 
 	}
 
@@ -62,7 +61,7 @@ func(c *userController) UpdateUser(ctx *gin.Context) {
 	resp.SendResp(ctx, code, "successfully update user", user, nil)
 }
 
-func(c *userController) DeleteUser(ctx *gin.Context) {
+func(c *UserController) DeleteUser(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	
 	err := c.svc.DeleteUser(ctx.Request.Context(), idParam)

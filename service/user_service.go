@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	valid "github.com/asaskevich/govalidator"
 	"github.com/devanfer02/nosudes-be/domain"
 )
 
 type userService struct {
-	repo domain.UserRepository
+	repo    domain.UserRepository
 	timeout time.Duration
 }
 
@@ -17,7 +18,7 @@ func NewUserService(repo domain.UserRepository, timeout time.Duration) domain.Us
 }
 
 func (s *userService) FetchAll(ctx context.Context) ([]domain.User, error) {
-	c, cancel := context.WithTimeout(ctx, s.timeout)	
+	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
 	users, err := s.repo.FetchAll(c)
@@ -31,25 +32,42 @@ func (s *userService) FetchByEmail(ctx context.Context, email string) (domain.Us
 
 	user, err := s.repo.FetchOneByArg(c, "email", email)
 
-	return user, err 
+	return user, err
 }
 
 func (s *userService) FetchByID(ctx context.Context, id string) (domain.User, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	user, err := s.repo.FetchOneByArg(c, "id", id)
+	user, err := s.repo.FetchOneByArg(c, "user_id", id)
 
-	return user, err 
+	return user, err
 }
 
-func (s *userService) UpdateUser(ctx context.Context, user *domain.User) error {
+func (s *userService) InsertUser(ctx context.Context, user *domain.UserPayload) error {
+	if _, err := valid.ValidateStruct(user); err != nil {
+		return err
+	}
+
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
 	err := s.repo.UpdateUser(c, user)
 
-	return err 
+	return err
+}
+
+func (s *userService) UpdateUser(ctx context.Context, user *domain.UserPayload) error {
+	if _, err := valid.ValidateStruct(user); err != nil {
+		return err
+	}
+
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	err := s.repo.UpdateUser(c, user)
+
+	return err
 }
 
 func (s *userService) DeleteUser(ctx context.Context, id string) error {
@@ -58,5 +76,7 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 
 	err := s.repo.DeleteUser(c, id)
 
-	return err 
+	return err
 }
+
+

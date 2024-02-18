@@ -57,90 +57,24 @@ func (m *mysqlUserRepository) FetchOneByArg(ctx context.Context, param, arg stri
 	return user, nil
 }
 
-func (m *mysqlUserRepository) InsertUser(ctx context.Context, user *domain.User) error {
+func (m *mysqlUserRepository) InsertUser(ctx context.Context, user *domain.UserPayload) error {
 	query := "INSERT INTO users (user_id, fullname, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
 
-	stmt, err := m.Conn.PrepareContext(ctx, query)
-
-	if err != nil {
-		logger.ErrLog(layers.Repository, "failed to prepare statement", err)
-		return domain.ErrInternalServer
-	}
-
 	currTime := helper.CurrentTime()
-
-	_, err = stmt.ExecContext(ctx, user.ID, user.Fullname, user.Email, user.Password, currTime, currTime)
-
-	if err != nil {
-		if domain.IsSQLUniqueViolation(err) {
-			return domain.ErrConflict
-		}
-		logger.ErrLog(layers.Repository, "failed to execute statement", err)
-		return domain.ErrInternalServer
-	}
-
-	return nil
+	
+	return execStatement(m.Conn, ctx, query, user.ID, user.Fullname, user.Email, user.Password, currTime, currTime)
 }
 
-func (m *mysqlUserRepository) UpdateUser(ctx context.Context, user *domain.User) error {
+func (m *mysqlUserRepository) UpdateUser(ctx context.Context, user *domain.UserPayload) error {
 	query := "UPDATE users SET fullname = ?, email = ?, password = ?, updated_at = ? WHERE user_id = ?"
 
-	stmt, err := m.Conn.PrepareContext(ctx, query)
-
-	if err != nil {
-		logger.ErrLog(layers.Repository, "failed to prepare statement", err)
-		return domain.ErrInternalServer
-	}
-
 	currTime := helper.CurrentTime()
-	rows, err := stmt.ExecContext(ctx, user.Fullname, user.Email, user.Password, currTime, user.ID)
 
-	if err != nil {
-		logger.ErrLog(layers.Repository, "failed to execute statement", err)
-		return domain.ErrInternalServer
-	}
-
-	affected, _ := rows.RowsAffected()
-
-	if affected == 0 {
-		return domain.ErrNotFound
-	}
-
-	if affected > 1 {
-		logger.ErrLog(layers.Repository, "internal server error", fmt.Errorf("weird behaviour, affected more than 1"))
-		return domain.ErrInternalServer
-	}
-
-	return nil
+	return execStatement(m.Conn, ctx, query, user.Fullname, user.Email, user.Password, currTime, user.ID)
 }
 
 func (m *mysqlUserRepository) DeleteUser(ctx context.Context, id string) error {
 	query := "DELETE FROM users WHERE user_id = ?"
 
-	stmt, err := m.Conn.PrepareContext(ctx, query)
-
-	if err != nil {
-		logger.ErrLog(layers.Repository, "failed to prepare statement", err)
-		return domain.ErrInternalServer
-	}
-
-	rows, err := stmt.ExecContext(ctx, id)
-
-	if err != nil {
-		logger.ErrLog(layers.Repository, "failed to execute statement", err)
-		return domain.ErrInternalServer
-	}
-
-	affected, _ := rows.RowsAffected()
-
-	if affected == 0 {
-		return domain.ErrNotFound
-	}
-
-	if affected > 1 {
-		logger.ErrLog(layers.Repository, "internal server error", fmt.Errorf("weird behaviour, affected more than 1"))
-		return domain.ErrInternalServer
-	}
-
-	return nil
+	return execStatement(m.Conn, ctx, query, id)
 }

@@ -8,7 +8,7 @@ type Response struct {
 	Code	 	int  			`json:"code"`
 	Message		string			`json:"message"`
 	Data		interface{} 	`json:"data,omitempty"`
-	Err			string 			`json:"err_message,omitempty"`
+	Err			string 			`json:"error,omitempty"`
 }
 
 func SendResp(ctx *gin.Context, code int, message string, data interface{}, err error) {
