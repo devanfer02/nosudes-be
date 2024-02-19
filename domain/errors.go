@@ -8,9 +8,11 @@ import (
 )
 
 var (
-	ErrInternalServer = errors.New("internal server error")
-	ErrConflict		  = errors.New("requested item conflicted with existing item")
-	ErrNotFound		  = errors.New("item not found")
+	ErrInternalServer 	= errors.New("internal server error")
+	ErrConflict		  	= errors.New("requested item conflicted with existing item")
+	ErrNotFound		  	= errors.New("item not found")
+	ErrInvalidToken   	= errors.New("invalid token")
+	ErrInvalidClaimsDT	= errors.New("invalid claims data type")
 )
 
 func GetCode(err error) int {
@@ -25,6 +27,8 @@ func GetCode(err error) int {
  		return http.StatusConflict
 	case ErrNotFound :
 		return http.StatusNotFound
+	case ErrInvalidToken :
+		return http.StatusUnauthorized
 	default : 
 		return http.StatusInternalServerError
 	}

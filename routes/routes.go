@@ -23,7 +23,8 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	uCtr := controller.NewUserController(uSvc)
 	r.setupUserRoutes(uCtr)
 
-	aCtr := controller.NewAuthController(uSvc)
+	aSvc := service.NewAuthService()
+	aCtr := controller.NewAuthController(uSvc, aSvc)
 	r.setupAuthRoutes(aCtr)
 }
 
@@ -39,5 +40,4 @@ func (r *router) setupAuthRoutes(ctr *controller.AuthController) {
 	aR := r.app.Group("/auth")
 	aR.POST("/register", ctr.RegisterUser)
 	aR.POST("/login", ctr.LoginUser)
-	aR.DELETE("/logout", ctr.LogoutUser)
 }

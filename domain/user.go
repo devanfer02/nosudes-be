@@ -17,15 +17,15 @@ type User struct {
 }
 
 type UserPayload struct {
-	ID		 string 
+	ID       string
 	Fullname string `json:"id" valid:"required"`
 	Email    string `json:"email" valid:"email"`
 	Password string `json:"password" valid:"required, stringlength(8|50)"`
 }
 
 type UserLogin struct {
-	Email		string	`json:"email" valid:"email"`
-	Password	string 	`json:"password" valid:"required"`
+	Email    string `json:"email" valid:"email"`
+	Password string `json:"password" valid:"required"`
 }
 
 type UserRepository interface {
@@ -49,7 +49,13 @@ func (p *UserPayload) Default() {
 	byteHashed, _ := bcrypt.GenerateFromPassword([]byte(p.Password), bcrypt.DefaultCost)
 
 	hashed := string(byteHashed)
-	
+
 	p.Password = hashed
 	p.ID = uuid.New().String()
+}
+
+func (u *User) Compare(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); 
+
+	return err != nil 
 }

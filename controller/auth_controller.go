@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/devanfer02/nosudes-be/domain"
 	resp "github.com/devanfer02/nosudes-be/utils/response"
 
@@ -9,11 +11,13 @@ import (
 
 type AuthController struct {
 	userSvc domain.UserService
+	authSvc domain.AuthService
 }
 
-func NewAuthController(userSvc domain.UserService) *AuthController {
+func NewAuthController(userSvc domain.UserService, authSvc domain.AuthService) *AuthController {
 	return &AuthController{
 		userSvc,
+		authSvc,
 	}
 }
 
@@ -37,14 +41,27 @@ func (c *AuthController) RegisterUser(ctx *gin.Context) {
 }
 
 func (c *AuthController) LoginUser(ctx *gin.Context) {
-	user := domain.UserLogin{}
+	userPayload := domain.UserLogin{}
 
-	if bindFailed(ctx, &user) {
+	if bindFailed(ctx, &userPayload) {
 		return
 	}
 
-}
+	user, err := c.userSvc.FetchByEmail(ctx.Request.Context(), userPayload.Email)
 
-func (c *AuthController) LogoutUser(ctx *gin.Context) {
+	if err != nil {
+		resp.SendResp(ctx, http.StatusUnauthorized, "wrong email or password", nil, nil)
+	}
 
+	if !user.Compare(userPayload.Password) {
+		resp.SendResp(ctx, http.StatusUnauthorized, "wrong email or password", nil, nil)
+	}
+
+	token, err := c.authSvc.CreateAccessToken(user.ID, user.Fullname)
+
+	if err != nil {
+		resp.SendResp(ctx, 500, "internal server error", nil, err)
+	}
+
+	resp.SendResp(ctx, 200, "user successfully login", gin.H{"token": token}, nil)
 }
