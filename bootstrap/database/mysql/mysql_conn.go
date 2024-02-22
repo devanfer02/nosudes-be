@@ -52,12 +52,13 @@ func DropAllTables(db *sqlx.DB) {
 	}
 
 	queries := strings.Split(string(content), ";")
+	fmt.Print(queries)
 
 	for _, query := range queries {
 		_, err = db.Exec(query)
 
 		if err != nil {
-			logger.FatalLog(layers.Mysql, fmt.Sprintf("could not execute query",), err)
+			logger.FatalLog(layers.Mysql, fmt.Sprintf("could not execute query: %s", query), err)
 		}
 	}
 }

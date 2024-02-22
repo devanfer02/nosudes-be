@@ -18,7 +18,8 @@ func (m *Middleware) Auth() gin.HandlerFunc {
 		claims, err := m.authSvc.VerifyToken(token)
 
 		if err != nil {
-			resp.SendResp(ctx, http.StatusUnauthorized, "invalid email or password", nil, nil)
+			resp.SendResp(ctx, http.StatusUnauthorized, "no auth token", nil, nil)
+			ctx.Abort()
 			return
 		}
 
@@ -26,10 +27,14 @@ func (m *Middleware) Auth() gin.HandlerFunc {
 
 		if err != nil {
 			resp.SendResp(ctx, http.StatusUnauthorized, "failed to convert", nil, err)
+			ctx.Abort()
+			return 
 		}
 
 		if  time.Now().Unix() >= exp {
 			resp.SendResp(ctx, http.StatusUnauthorized, "token duration exceeded", nil, nil)
+			ctx.Abort()
+			return 
 		}
 
 		ctx.Set("user", id)

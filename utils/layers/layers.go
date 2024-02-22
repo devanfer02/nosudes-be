@@ -6,4 +6,5 @@ var (
 	Mysql 		= "MYSQL"
 	Service 	= "SERVICE"
 	Controller  = "CONTROLLER"
+	Firebase	= "FIREBASE"
 )

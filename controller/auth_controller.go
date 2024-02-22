@@ -28,7 +28,6 @@ func (c *AuthController) RegisterUser(ctx *gin.Context) {
 		return
 	}
 
-	user.Default()
 	err := c.userSvc.InsertUser(ctx.Request.Context(), &user)
 	code := domain.GetCode(err)
 
@@ -50,17 +49,20 @@ func (c *AuthController) LoginUser(ctx *gin.Context) {
 	user, err := c.userSvc.FetchByEmail(ctx.Request.Context(), userPayload.Email)
 
 	if err != nil {
-		resp.SendResp(ctx, http.StatusUnauthorized, "wrong email or password", nil, nil)
+		resp.SendResp(ctx, http.StatusUnauthorized, "invalid email or password", nil, nil)
+		return
 	}
 
-	if !user.Compare(userPayload.Password) {
-		resp.SendResp(ctx, http.StatusUnauthorized, "wrong email or password", nil, nil)
+	if err = user.Compare(userPayload.Password); err != nil {
+		resp.SendResp(ctx, http.StatusUnauthorized, "invalid email or password", nil, nil)
+		return
 	}
 
-	token, err := c.authSvc.CreateAccessToken(user.ID, user.Fullname)
+	token, err := c.authSvc.CreateAccessToken(user.ID, user.Username)
 
 	if err != nil {
 		resp.SendResp(ctx, 500, "internal server error", nil, err)
+		return
 	}
 
 	resp.SendResp(ctx, 200, "user successfully login", gin.H{"token": token}, nil)

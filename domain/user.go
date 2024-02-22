@@ -10,6 +10,7 @@ import (
 type User struct {
 	ID        string `json:"id" db:"user_id"`
 	Fullname  string `json:"fullname" db:"fullname"`
+	Username  string `json:"username" db:"username"`
 	Email     string `json:"email" db:"email"`
 	Password  string `json:"password" db:"password"`
 	CreatedAt string `json:"created_at" db:"created_at"`
@@ -18,7 +19,8 @@ type User struct {
 
 type UserPayload struct {
 	ID       string
-	Fullname string `json:"id" valid:"required"`
+	Fullname string `json:"fullname" valid:"required"`
+	Username string `json:"username" valid:"required"`
 	Email    string `json:"email" valid:"email"`
 	Password string `json:"password" valid:"required, stringlength(8|50)"`
 }
@@ -54,8 +56,6 @@ func (p *UserPayload) Default() {
 	p.ID = uuid.New().String()
 }
 
-func (u *User) Compare(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); 
-
-	return err != nil 
+func (u *User) Compare(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); 
 }

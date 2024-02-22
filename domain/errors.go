@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -13,11 +14,17 @@ var (
 	ErrNotFound		  	= errors.New("item not found")
 	ErrInvalidToken   	= errors.New("invalid token")
 	ErrInvalidClaimsDT	= errors.New("invalid claims data type")
+	ErrForbidden 		= errors.New("forbidden to modify resources")
+	ErrInvalidFileType 	= errors.New("invalid file type")
 )
 
 func GetCode(err error) int {
 	if err == nil {
 		return http.StatusOK
+	}
+
+	if strings.Contains(err.Error(), "validate") {
+		return http.StatusBadRequest
 	}
 
 	switch(err) {
@@ -29,6 +36,10 @@ func GetCode(err error) int {
 		return http.StatusNotFound
 	case ErrInvalidToken :
 		return http.StatusUnauthorized
+	case ErrForbidden :
+		return http.StatusForbidden
+	case ErrInvalidFileType :
+		return http.StatusBadRequest
 	default : 
 		return http.StatusInternalServerError
 	}

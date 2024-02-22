@@ -8,16 +8,19 @@ import (
 )
 
 type Env struct {
-	AppEnv        string `mapstructure:"APP_ENV"`
-	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
-	ApiKey        string `mapstructure:"API_KEY"`
-	DBHost        string `mapstructure:"DB_HOST"`
-	DBPort        string `mapstructure:"DB_PORT"`
-	DBUser        string `mapstructure:"DB_USER"`
-	DBPassword    string `mapstructure:"DB_PASSWORD"`
-	DBName        string `mapstructure:"DB_NAME"`
-	ATSecret      string `mapstructure:"ACCESS_TOKEN_SECRET"`
-	ClientURL     string `mapstructure:"CLIENT_URL"`
+	AppEnv        		string `mapstructure:"APP_ENV"`
+	ServerAddress 		string `mapstructure:"SERVER_ADDRESS"`
+	ApiKey        		string `mapstructure:"API_KEY"`
+	DBHost        		string `mapstructure:"DB_HOST"`
+	DBPort        		string `mapstructure:"DB_PORT"`
+	DBUser        		string `mapstructure:"DB_USER"`
+	DBPassword    		string `mapstructure:"DB_PASSWORD"`
+	DBName        		string `mapstructure:"DB_NAME"`
+	MapsAPIKey 			string `mapstructure:"GMAPS_API_KEY"`
+	FirebaseConf 		string `mapstructure:"FIREBASE_CONFIG_PATH"`
+	FirebaseBucket 		string `mapstructure:"FIREBASE_BUCKET_NAME"`
+	ATSecret      		string `mapstructure:"ACCESS_TOKEN_SECRET"`
+	ClientURL     		string `mapstructure:"CLIENT_URL"`
 }
 
 var ProcEnv = GetEnv()

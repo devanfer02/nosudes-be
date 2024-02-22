@@ -41,7 +41,7 @@ func(c *UserController) FetchByID(ctx *gin.Context) {
 }
 
 func(c *UserController) UpdateUser(ctx *gin.Context) {
-	idParam := ctx.Param("id")
+	idParam := ctx.GetString("user")
 	user := domain.UserPayload{}
 
 	if bindFailed(ctx, &user) {
@@ -62,7 +62,7 @@ func(c *UserController) UpdateUser(ctx *gin.Context) {
 }
 
 func(c *UserController) DeleteUser(ctx *gin.Context) {
-	idParam := ctx.Param("id")
+	idParam := ctx.GetString("user")
 	
 	err := c.svc.DeleteUser(ctx.Request.Context(), idParam)
 	code := domain.GetCode(err)

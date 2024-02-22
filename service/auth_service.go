@@ -24,7 +24,7 @@ func (s *authService) CreateAccessToken(id, fullname string) (string, error) {
 		"exp":  time.Now().Add(time.Hour * 3).Unix(),
 	})
 
-	tokenStr, err := token.SignedString(env.ProcEnv.ATSecret)
+	tokenStr, err := token.SignedString([]byte(env.ProcEnv.ATSecret))
 
 	if err != nil {
 		return "", err
@@ -57,12 +57,19 @@ func (s *authService) VerifyToken(tokenStr string) (*jwt.MapClaims, error) {
 }
 
 func (s *authService) GetIdAndExp(claims *jwt.MapClaims) (string, int64, error) {
-	exp, ok := (*claims)["exp"].(int64)
+	exp, ok := (*claims)["exp"].(float64)
+
+	if !ok {
+		
+		return "", 0, domain.ErrInvalidClaimsDT
+	}
+
 	id, ok := (*claims)["id"].(string)
 
 	if !ok {
+
 		return "", 0, domain.ErrInvalidClaimsDT
 	}
-	
-	return id, exp, nil
+
+	return id, int64(exp), nil
 }

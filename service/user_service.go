@@ -52,7 +52,8 @@ func (s *userService) InsertUser(ctx context.Context, user *domain.UserPayload) 
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	err := s.repo.UpdateUser(c, user)
+	user.Default()
+	err := s.repo.InsertUser(c, user)
 
 	return err
 }
@@ -62,10 +63,20 @@ func (s *userService) UpdateUser(ctx context.Context, user *domain.UserPayload) 
 		return err
 	}
 
+	userDb, err := s.FetchByID(ctx, user.ID)
+
+	if err != nil {
+		return err 
+	}
+
+	if userDb.ID != user.ID {
+		return domain.ErrForbidden
+	}
+
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	err := s.repo.UpdateUser(c, user)
+	err = s.repo.UpdateUser(c, user)
 
 	return err
 }

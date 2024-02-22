@@ -58,19 +58,21 @@ func (m *mysqlUserRepository) FetchOneByArg(ctx context.Context, param, arg stri
 }
 
 func (m *mysqlUserRepository) InsertUser(ctx context.Context, user *domain.UserPayload) error {
-	query := "INSERT INTO users (user_id, fullname, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
+	query := `INSERT INTO users 
+		(user_id, fullname, username, email, password, created_at, updated_at) 
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	currTime := helper.CurrentTime()
 	
-	return execStatement(m.Conn, ctx, query, user.ID, user.Fullname, user.Email, user.Password, currTime, currTime)
+	return execStatement(m.Conn, ctx, query, user.ID, user.Fullname, user.Username, user.Email, user.Password, currTime, currTime)
 }
 
 func (m *mysqlUserRepository) UpdateUser(ctx context.Context, user *domain.UserPayload) error {
-	query := "UPDATE users SET fullname = ?, email = ?, password = ?, updated_at = ? WHERE user_id = ?"
+	query := "UPDATE users SET fullname = ?, username = ?, email = ?, password = ?, updated_at = ? WHERE user_id = ?"
 
 	currTime := helper.CurrentTime()
 
-	return execStatement(m.Conn, ctx, query, user.Fullname, user.Email, user.Password, currTime, user.ID)
+	return execStatement(m.Conn, ctx, query, user.Fullname, user.Username, user.Email, user.Password, currTime, user.ID)
 }
 
 func (m *mysqlUserRepository) DeleteUser(ctx context.Context, id string) error {
