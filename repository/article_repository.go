@@ -49,7 +49,7 @@ func(m *mysqlArticleRepository) FetchByID(ctx context.Context, id string) (domai
 		return domain.Article{}, domain.ErrInternalServer
 	}
 
-	return domain.Article{}, nil
+	return article, nil
 }
 
 func(m *mysqlArticleRepository) InsertArticle(ctx context.Context, article *domain.Article) error  {

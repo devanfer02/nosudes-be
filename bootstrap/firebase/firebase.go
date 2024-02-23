@@ -122,16 +122,15 @@ func (f *FirebaseStorage) CreateDownloadUrl(ctx context.Context, obj *cstorage.O
 }
 
 func (f *FirebaseStorage) DeleteFile(ctx context.Context, downloadUrl string) error {
+
 	parsedUrl, err := url.Parse(downloadUrl)
 
 	if err != nil {
-		logger.ErrLog(layers.Firebase, "error parsing url", err)
 		return err
 	}
 
-	objectPath := strings.TrimLeft(parsedUrl.Path, "/")
-
-	fmt.Println(objectPath)
+	sanitized := strings.ReplaceAll(parsedUrl.Path, "%2F", "/")
+	sanitized = sanitized[strings.Index(sanitized, "o/")+2:]
 
 	bucket, err := f.client.DefaultBucket()
 
@@ -139,12 +138,12 @@ func (f *FirebaseStorage) DeleteFile(ctx context.Context, downloadUrl string) er
 		return err
 	}
 
-	object := bucket.Object(objectPath)
+	object := bucket.Object(sanitized)
 
 	if err := object.Delete(ctx); err != nil {
 		logger.ErrLog(layers.Firebase, "error deleting object", err)
 		return err
 	}
 
-	return nil 
+	return nil
 }

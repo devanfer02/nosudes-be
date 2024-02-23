@@ -24,21 +24,27 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	fileStorage := firebase.NewFirebaseStorage()
 
 	userRepo := repository.NewMysqlUserRepository(db)
-	userSvc := service.NewUserService(userRepo, time.Second*12)
+	userSvc := service.NewUserService(userRepo, 12 * time.Second)
 	userCtr := controller.NewUserController(userSvc)
 
 	authSvc := service.NewAuthService()
 	authCtr := controller.NewAuthController(userSvc, authSvc)
 
 	artRepo := repository.NewMysqlArticleRepository(db)
-	artSvc := service.NewArticleService(artRepo, fileStorage, 25 * time.Second)
+	artSvc := service.NewArticleService(artRepo, fileStorage, 20 * time.Second)
 	artCtr := controller.NewArticleController(artSvc)
+
+	attrRepo := repository.NewMysqlAttractionRepository(db)
+	attrPhotoRepo := repository.NewMysqlAttractionPhotoRepository(db)
+	attrSvc := service.NewAttractionSerivce(attrRepo, attrPhotoRepo, fileStorage, 20 * time.Second)
+	attrCtr := controller.NewAttractionController(attrSvc)
 
 	r := router{app, db, middleware.NewMiddleware(userSvc, authSvc)}
 
 	r.setupUserRoutes(userCtr)
 	r.setupAuthRoutes(authCtr)
 	r.setupArticleRoutes(artCtr)
+	r.setupAttractionRoutes(attrCtr)
 }
 
 func (r *router) setupUserRoutes(ctr *controller.UserController) {
@@ -62,4 +68,14 @@ func (r *router) setupArticleRoutes(ctr *controller.ArticleController) {
 	aR.POST("", ctr.CreateArticle)
 	aR.PUT("/:id", ctr.UpdateArticle)
 	aR.DELETE("/:id", ctr.DeleteArticle)
+}
+
+func (r *router) setupAttractionRoutes(ctr *controller.AttractionController) {
+	aR := r.app.Group("/attractions")
+	aR.GET("", ctr.FetchAll)
+	aR.GET("/:id", ctr.FetchByID)
+	aR.POST("", ctr.InsertAttraction)
+	aR.PUT("/:id", ctr.UpdateAttraction)
+	aR.POST("/:id", ctr.UploadAttractionPhoto)
+	aR.DELETE("/:id", ctr.DeleteAttraction)
 }

@@ -3,12 +3,14 @@ package repository
 import (
 	"fmt"
 	"context"
+	"strings"
 
 	"github.com/devanfer02/nosudes-be/utils/logger"
 	"github.com/devanfer02/nosudes-be/utils/layers"
 	"github.com/devanfer02/nosudes-be/domain"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/go-sql-driver/mysql"
 )
 
 func execStatement(conn *sqlx.DB, ctx context.Context, query string, args ...interface{}) error {
@@ -22,8 +24,12 @@ func execStatement(conn *sqlx.DB, ctx context.Context, query string, args ...int
 	rows, err := stmt.ExecContext(ctx, args...)
 
 	if err != nil {
-		if domain.IsSQLUniqueViolation(err) {
+		if isSQLUniqueViolation(err) {
 			return domain.ErrConflict
+		}
+
+		if isForeignKeyViolation(err) {
+			return domain.ErrForeignItemNotFound
 		}
 		
 		logger.ErrLog(layers.Repository, "failed to execute statement", err)
@@ -42,4 +48,32 @@ func execStatement(conn *sqlx.DB, ctx context.Context, query string, args ...int
 	}
 
 	return nil
+}
+
+func isSQLUniqueViolation(err error) bool {
+	sqlerr, ok := err.(*mysql.MySQLError)
+
+	if !ok {
+		return false
+	}
+
+	return sqlerr.Number == 1062
+}
+
+func isForeignKeyViolation(err error) bool {
+	sqlerr, ok := err.(*mysql.MySQLError)
+
+	if !ok {
+		return  false
+	}
+
+	if sqlerr.Number == 1452 {
+		return true
+	}
+
+	if strings.Contains(sqlerr.Error(), "foreign key constraint fails") {
+		return true
+	}
+
+	return false
 }

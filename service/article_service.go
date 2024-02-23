@@ -7,7 +7,7 @@ import (
 	"github.com/devanfer02/nosudes-be/domain"
 )
 
-const CLOUD_STORE_DIR = "articles"
+const ARTICLE_CLOUD_STORE_DIR = "articles"
 
 type articleService struct {
 	artRepo   domain.ArticleRepository
@@ -41,7 +41,7 @@ func (s *articleService) InsertArticle(ctx context.Context, article *domain.Arti
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	url, err := s.fileStore.UploadFile(CLOUD_STORE_DIR, article.PhotoFile)
+	url, err := s.fileStore.UploadFile(ARTICLE_CLOUD_STORE_DIR, article.PhotoFile)
 
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (s *articleService) UpdateArticle(ctx context.Context, article *domain.Arti
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	url, err := s.fileStore.UploadFile(CLOUD_STORE_DIR, article.PhotoFile)
+	url, err := s.fileStore.UploadFile(ARTICLE_CLOUD_STORE_DIR, article.PhotoFile)
 
 	if err != nil {
 		return err

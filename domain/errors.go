@@ -4,18 +4,17 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-
-	"github.com/go-sql-driver/mysql"
 )
 
 var (
-	ErrInternalServer 	= errors.New("internal server error")
-	ErrConflict		  	= errors.New("requested item conflicted with existing item")
-	ErrNotFound		  	= errors.New("item not found")
-	ErrInvalidToken   	= errors.New("invalid token")
-	ErrInvalidClaimsDT	= errors.New("invalid claims data type")
-	ErrForbidden 		= errors.New("forbidden to modify resources")
-	ErrInvalidFileType 	= errors.New("invalid file type")
+	ErrInternalServer 		= errors.New("internal server error")
+	ErrConflict		  		= errors.New("requested item conflicted with existing item")
+	ErrNotFound		  		= errors.New("item not found")
+	ErrInvalidToken   		= errors.New("invalid token")
+	ErrInvalidClaimsDT		= errors.New("invalid claims data type")
+	ErrForbidden 			= errors.New("forbidden to modify resources")
+	ErrInvalidFileType 		= errors.New("invalid file type")
+	ErrForeignItemNotFound 	= errors.New("foreign item with requested id not found")
 )
 
 func GetCode(err error) int {
@@ -43,14 +42,4 @@ func GetCode(err error) int {
 	default : 
 		return http.StatusInternalServerError
 	}
-}
-
-func IsSQLUniqueViolation(err error) bool {
-	sqlerr, ok := err.(*mysql.MySQLError)
-
-	if !ok {
-		return false
-	}
-
-	return sqlerr.Number == 1062
 }
