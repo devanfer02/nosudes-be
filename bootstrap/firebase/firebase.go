@@ -23,6 +23,11 @@ import (
 	"google.golang.org/api/option"
 )
 
+var (
+	extFileOpt = []string{"jpg", "jpeg", "png"}
+	metadata   = []string{"image/jpeg", "image/jpeg", "image/png"}
+)
+
 type FirebaseStorage struct {
 	client *fstorage.Client
 }
@@ -78,6 +83,12 @@ func (f *FirebaseStorage) UploadFile(dir string, file *multipart.FileHeader) (st
 
 	wr.ObjectAttrs.Metadata = map[string]string{
 		"firebaseStorageDownloadTokens": uuid,
+	}
+
+	for idx, ext := range extFileOpt {
+		if strings.Contains(filepath.Ext(file.Filename), ext) {
+			wr.ObjectAttrs.ContentType = metadata[idx]
+		}
 	}
 
 	if _, err := io.Copy(wr, src); err != nil {

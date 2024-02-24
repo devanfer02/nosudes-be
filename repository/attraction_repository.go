@@ -20,7 +20,7 @@ func NewMysqlAttractionRepository(conn *sqlx.DB) domain.AttractionRepository {
 	return &mysqlAttractionRepository{conn}
 }
 
-func(m *mysqlAttractionRepository) FetchAll(ctx context.Context) ([]domain.Attraction, error) {
+func(m *mysqlAttractionRepository) FetchAll(ctx context.Context) ([]*domain.Attraction, error) {
 	query := `SELECT 
 		a.attraction_id AS attraction_id, 
 		a.name, ac.category_name AS category,
@@ -28,7 +28,7 @@ func(m *mysqlAttractionRepository) FetchAll(ctx context.Context) ([]domain.Attra
 		FROM attractions a JOIN attraction_categories ac
 		ON a.category_id = ac.category_id`
 
-	attractions := make([]domain.Attraction, 0)
+	attractions := make([]*domain.Attraction, 0)
 
 	err := m.Conn.SelectContext(ctx, &attractions, query)
 
@@ -40,7 +40,7 @@ func(m *mysqlAttractionRepository) FetchAll(ctx context.Context) ([]domain.Attra
 	return attractions, nil 
 }
 
-func(m *mysqlAttractionRepository) FetchByID(ctx context.Context, id string) (domain.Attraction, error) {
+func(m *mysqlAttractionRepository) FetchByID(ctx context.Context, id string) (*domain.Attraction, error) {
 	query := `SELECT 
 		a.attraction_id AS attraction_id, 
 		a.name, ac.category_name AS category,
@@ -49,16 +49,16 @@ func(m *mysqlAttractionRepository) FetchByID(ctx context.Context, id string) (do
 		ON a.category_id = ac.category_id
 		WHERE attraction_id = ?`
 
-	attraction := domain.Attraction{}
+	attraction := &domain.Attraction{}
 
-	err := m.Conn.GetContext(ctx, &attraction, query, id)
+	err := m.Conn.GetContext(ctx, attraction, query, id)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return domain.Attraction{}, domain.ErrNotFound
+			return nil, domain.ErrNotFound
 		}
 		logger.ErrLog(layers.Repository, "failed to exec query", err)
-		return domain.Attraction{}, domain.ErrInternalServer
+		return nil, domain.ErrInternalServer
 	}
 
 	return attraction, nil

@@ -56,7 +56,7 @@ func (c *AttractionController) InsertAttraction(ctx *gin.Context) {
 		return 
 	}
 
-	resp.SendResp(ctx, code, "successfully insert attraction", attraction, nil)
+	resp.SendResp(ctx, 201, "successfully insert attraction", attraction, nil)
 }	
 
 func (c *AttractionController) UpdateAttraction(ctx *gin.Context) {
@@ -80,7 +80,7 @@ func (c *AttractionController) UpdateAttraction(ctx *gin.Context) {
 }
 
 func (c *AttractionController) UploadAttractionPhoto(ctx *gin.Context) {
-	attrPhoto := domain.AttractionPhoto{}
+	attrPhoto := domain.AttractionPhotoPayload{}
 	idParam := ctx.Param("id")
 
 	if err := ctx.ShouldBind(&attrPhoto); err != nil {
@@ -97,7 +97,7 @@ func (c *AttractionController) UploadAttractionPhoto(ctx *gin.Context) {
 		return 
 	}
 
-	resp.SendResp(ctx, code, "successfully upload attraction photo", nil, nil)
+	resp.SendResp(ctx, 201, "successfully upload attraction photo", nil, nil)
 }
 
 func (c *AttractionController) DeleteAttraction(ctx *gin.Context) {

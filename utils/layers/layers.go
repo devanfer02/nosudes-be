@@ -7,4 +7,5 @@ var (
 	Service 	= "SERVICE"
 	Controller  = "CONTROLLER"
 	Firebase	= "FIREBASE"
+	Domain		= "DOMAIN"
 )
