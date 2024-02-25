@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS attractions (
     description     TEXT NOT NULL,
     opening_hours   VARCHAR(200) NOT NULL,
     maps_embed_url  VARCHAR(200) NOT NULL, 
+    location        VARCHAR(250) NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) Engine = InnoDB

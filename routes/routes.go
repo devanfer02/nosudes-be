@@ -35,10 +35,11 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	artCtr := controller.NewArticleController(artSvc)
 
 	opHourRepo := repository.NewMysqlOpHoursRepository(db)
+	priceAttrRepo := repository.NewMysqlAttractionPricesRepository(db)
 
 	attrRepo := repository.NewMysqlAttractionRepository(db)
 	attrPhotoRepo := repository.NewMysqlAttractionPhotoRepository(db)
-	attrSvc := service.NewAttractionSerivce(attrRepo, attrPhotoRepo, opHourRepo, fileStorage, 20 * time.Second)
+	attrSvc := service.NewAttractionSerivce(attrRepo, attrPhotoRepo, priceAttrRepo, opHourRepo, fileStorage, 20 * time.Second)
 	attrCtr := controller.NewAttractionController(attrSvc)
 
 	r := router{app, db, middleware.NewMiddleware(userSvc, authSvc)}

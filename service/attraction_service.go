@@ -2,10 +2,18 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/devanfer02/nosudes-be/bootstrap/env"
 	"github.com/devanfer02/nosudes-be/domain"
+	"github.com/devanfer02/nosudes-be/utils/layers"
+	"github.com/devanfer02/nosudes-be/utils/logger"
 )
 
 const ATTRACTION_CLOUD_STORE_DIR = "attractions"
@@ -13,6 +21,7 @@ const ATTRACTION_CLOUD_STORE_DIR = "attractions"
 type attractionService struct {
 	attrRepo      domain.AttractionRepository
 	attrPhotoRepo domain.AttractionPhotoRepository
+	attrPriceRepo domain.PriceDetailsRepository
 	opHourRepo    domain.OperationHoursRepository
 	fileStore     domain.FileStorage
 	timeout       time.Duration
@@ -21,11 +30,12 @@ type attractionService struct {
 func NewAttractionSerivce(
 	attrRepo domain.AttractionRepository,
 	attrPhotoRepo domain.AttractionPhotoRepository,
+	attrPriceRepo domain.PriceDetailsRepository,
 	opHourRepo domain.OperationHoursRepository,
 	fileStore domain.FileStorage,
 	timeout time.Duration,
 ) domain.AttractionService {
-	return &attractionService{attrRepo, attrPhotoRepo, opHourRepo, fileStore, timeout}
+	return &attractionService{attrRepo, attrPhotoRepo, attrPriceRepo, opHourRepo, fileStore, timeout}
 }
 
 func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction, error) {
@@ -34,16 +44,24 @@ func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction,
 
 	attractions, err := s.attrRepo.FetchAll(c)
 
+	var wg sync.WaitGroup
+
+	errChan := make(chan error, len(attractions) * 3)
+
 	for _, attraction := range attractions {
+		wg.Add(1)
+		go func(attr *domain.Attraction){
+			defer wg.Done()
+			s.fetch(c, attr, errChan)
+		}(attraction)
+	}
 
-		attraction.Photos, err = s.attrPhotoRepo.FetchPhotoUrlsByAttrID(c, attraction.ID)
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
 
-		if err != nil {
-			return nil, err
-		}
-
-		attraction.OperationHours, err = s.opHourRepo.FetchByAttID(c, attraction.ID)
-
+	for err := range errChan {
 		if err != nil {
 			return nil, err
 		}
@@ -62,13 +80,26 @@ func (s *attractionService) FetchByID(ctx context.Context, id string) (*domain.A
 		return nil, err
 	}
 
-	attraction.Photos, err = s.attrPhotoRepo.FetchPhotoUrlsByAttrID(ctx, id)
+	var wg sync.WaitGroup
 
-	if err != nil {
-		return nil, err
+	errChan := make(chan error, 4)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.fetch(c, attraction, errChan)
+	}()
+
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	for err := range errChan {
+		if err != nil {
+			return attraction, err
+		}
 	}
-
-	attraction.OperationHours, err = s.opHourRepo.FetchByAttID(c, id)
 
 	return attraction, err
 }
@@ -79,17 +110,24 @@ func (s *attractionService) InsertAttraction(ctx context.Context, attraction *do
 
 	attraction.Default()
 
+	err := s.attrRepo.InsertAttraction(c, attraction)
+
+	if err != nil {
+		return err
+	}
+
+	// concurrency to insert multipler opening hours
 	errChan := make(chan error, len(attraction.OpeningHours))
 
-	var wg sync.WaitGroup
+	var wgOp sync.WaitGroup
 
 	for _, opHour := range attraction.OperationHours {
 
 		opHour.Default(attraction.ID)
-		wg.Add(1)
+		wgOp.Add(1)
 
 		go func(opHour domain.OperationHours) {
-			defer wg.Done()
+			defer wgOp.Done()
 
 			err := s.opHourRepo.InsertWithAttID(ctx, &opHour)
 
@@ -100,7 +138,7 @@ func (s *attractionService) InsertAttraction(ctx context.Context, attraction *do
 	}
 
 	go func() {
-		wg.Wait()
+		wgOp.Wait()
 		close(errChan)
 	}()
 
@@ -110,9 +148,38 @@ func (s *attractionService) InsertAttraction(ctx context.Context, attraction *do
 		}
 	}
 
-	err := s.attrRepo.InsertAttraction(c, attraction)
+	// concurrency to insert mutlipler price details
 
-	return err
+	errChan = make(chan error, len(attraction.PriceDetails))
+
+	var wgPr sync.WaitGroup
+
+	for _, prd := range attraction.PriceDetails {
+		wgPr.Add(1)
+
+		go func(price domain.PriceDetails) {
+			defer wgPr.Done()
+
+			err := s.attrPriceRepo.InsertWithAttID(ctx, &price)
+
+			if err != nil {
+				errChan <- err
+			}
+		}(*prd)
+	}
+
+	go func() {
+		wgPr.Wait()
+		close(errChan)
+	}()
+
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *attractionService) UpdateAttraction(ctx context.Context, attraction *domain.AttractionPayload) error {
@@ -134,13 +201,13 @@ func (s *attractionService) UploadPhotoByAttID(ctx context.Context, attrPhoto *d
 		return err
 	}
 
-	errChan := make(chan error, len(attrPhoto.PhotoFiles) * 2)
+	errChan := make(chan error, len(attrPhoto.PhotoFiles)*2)
 
 	var wg sync.WaitGroup
 
 	for _, file := range attrPhoto.PhotoFiles {
 		attrPh := domain.AttractionPhoto{}
-		attrPh.PhotoFile = file 
+		attrPh.PhotoFile = file
 		attrPh.AttractionID = attrPhoto.AttractionID
 
 		wg.Add(1)
@@ -151,13 +218,13 @@ func (s *attractionService) UploadPhotoByAttID(ctx context.Context, attrPhoto *d
 			attrPh.PhotoUrl, err = s.fileStore.UploadFile(ATTRACTION_CLOUD_STORE_DIR, attrPh.PhotoFile)
 
 			if err != nil {
-				errChan <- err 
+				errChan <- err
 			}
 
 			err = s.attrPhotoRepo.InsertPhotoUrl(ctx, &attrPh)
 
 			if err != nil {
-				errChan <- err 
+				errChan <- err
 			}
 
 		}(attrPh)
@@ -170,7 +237,7 @@ func (s *attractionService) UploadPhotoByAttID(ctx context.Context, attrPhoto *d
 
 	for err := range errChan {
 		if err != nil {
-			return err 
+			return err
 		}
 	}
 
@@ -185,4 +252,78 @@ func (s *attractionService) DeleteAttraction(ctx context.Context, id string) err
 	err := s.attrRepo.DeleteAttraction(c, id)
 
 	return err
+}
+
+func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, errChan chan error) {
+	var wg sync.WaitGroup 
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		photos, err := s.attrPhotoRepo.FetchPhotoUrlsByAttrID(c, attr.ID)
+
+		if err != nil {
+			errChan <- err
+		}
+		
+		attr.Photos = photos
+	}()
+
+	go func() {
+		defer wg.Done()
+		rating, err := s.getRatings(attr.Name)
+
+		if err != nil {
+			errChan <- err
+		}
+
+		attr.Rating = rating
+	}()
+
+	go func() {
+		defer wg.Done()
+		priceDetails, err := s.attrPriceRepo.FetchByAttID(c, attr.ID)
+
+		if err != nil {
+			errChan <- err
+		}
+
+		attr.PriceDetails = priceDetails
+	}()
+
+	wg.Wait()
+}
+
+func (s *attractionService) getRatings(attractionName string) (domain.Ratings, error) {
+	mapsEndpoint := fmt.Sprintf(
+		"https://maps.googleapis.com/maps/api/place/textsearch/json?query=%s&sensor=true&key=%s",
+		strings.ReplaceAll(attractionName, " ", "+"),
+		env.ProcEnv.MapsAPIKey,
+	)
+
+	apiResp, err := http.Get(mapsEndpoint)
+
+	if err != nil {
+		logger.ErrLog(layers.Service, "failed to fetch api", err)
+		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
+	}
+
+	body, err := io.ReadAll(apiResp.Body)
+
+	if err != nil {
+		logger.ErrLog(layers.Service, "failed to read response body", err)
+		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
+	}
+
+	var gmapsRef domain.GmapsRef
+
+	err = json.Unmarshal(body, &gmapsRef)
+
+	if err != nil {
+		logger.ErrLog(layers.Service, "failed to unmarshal json", err)
+		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
+	}
+
+	return gmapsRef.Results[0], nil
 }

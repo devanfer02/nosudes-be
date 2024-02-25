@@ -15,6 +15,7 @@ var (
 	ErrForbidden 			= errors.New("forbidden to modify resources")
 	ErrInvalidFileType 		= errors.New("invalid file type")
 	ErrForeignItemNotFound 	= errors.New("foreign item with requested id not found")
+	ErrFailedFetchOtherAPI	= errors.New("failed to fetch other api")
 )
 
 func GetCode(err error) int {
@@ -39,6 +40,8 @@ func GetCode(err error) int {
 		return http.StatusForbidden
 	case ErrInvalidFileType :
 		return http.StatusBadRequest
+	case ErrFailedFetchOtherAPI :
+		return http.StatusOK
 	default : 
 		return http.StatusInternalServerError
 	}
