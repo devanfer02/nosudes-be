@@ -2,18 +2,11 @@ package service
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"strings"
-	"sync"
 	"time"
+	"sync"
 
-	"github.com/devanfer02/nosudes-be/bootstrap/env"
 	"github.com/devanfer02/nosudes-be/domain"
-	"github.com/devanfer02/nosudes-be/utils/layers"
-	"github.com/devanfer02/nosudes-be/utils/logger"
+	"github.com/devanfer02/nosudes-be/utils/gmaps"
 )
 
 const ATTRACTION_CLOUD_STORE_DIR = "attractions"
@@ -43,6 +36,10 @@ func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction,
 	defer cancel()
 
 	attractions, err := s.attrRepo.FetchAll(c)
+
+	if err != nil {
+		return nil, err
+	}
 
 	var wg sync.WaitGroup
 
@@ -103,6 +100,7 @@ func (s *attractionService) FetchByID(ctx context.Context, id string) (*domain.A
 
 	return attraction, err
 }
+
 
 func (s *attractionService) InsertAttraction(ctx context.Context, attraction *domain.AttractionPayload) error {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
@@ -272,7 +270,7 @@ func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, er
 
 	go func() {
 		defer wg.Done()
-		rating, err := s.getRatings(attr.Name)
+		rating, err := gmaps.GetRatings(attr.Name)
 
 		if err != nil {
 			errChan <- err
@@ -295,35 +293,3 @@ func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, er
 	wg.Wait()
 }
 
-func (s *attractionService) getRatings(attractionName string) (domain.Ratings, error) {
-	mapsEndpoint := fmt.Sprintf(
-		"https://maps.googleapis.com/maps/api/place/textsearch/json?query=%s&sensor=true&key=%s",
-		strings.ReplaceAll(attractionName, " ", "+"),
-		env.ProcEnv.MapsAPIKey,
-	)
-
-	apiResp, err := http.Get(mapsEndpoint)
-
-	if err != nil {
-		logger.ErrLog(layers.Service, "failed to fetch api", err)
-		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
-	}
-
-	body, err := io.ReadAll(apiResp.Body)
-
-	if err != nil {
-		logger.ErrLog(layers.Service, "failed to read response body", err)
-		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
-	}
-
-	var gmapsRef domain.GmapsRef
-
-	err = json.Unmarshal(body, &gmapsRef)
-
-	if err != nil {
-		logger.ErrLog(layers.Service, "failed to unmarshal json", err)
-		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
-	}
-
-	return gmapsRef.Results[0], nil
-}

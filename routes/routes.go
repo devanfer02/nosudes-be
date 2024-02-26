@@ -24,23 +24,27 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	fileStorage := firebase.NewFirebaseStorage()
 
 	userRepo := repository.NewMysqlUserRepository(db)
-	userSvc := service.NewUserService(userRepo, 12 * time.Second)
-	userCtr := controller.NewUserController(userSvc)
-
-	authSvc := service.NewAuthService()
-	authCtr := controller.NewAuthController(userSvc, authSvc)
-
 	artRepo := repository.NewMysqlArticleRepository(db)
-	artSvc := service.NewArticleService(artRepo, fileStorage, 20 * time.Second)
-	artCtr := controller.NewArticleController(artSvc)
-
 	opHourRepo := repository.NewMysqlOpHoursRepository(db)
 	priceAttrRepo := repository.NewMysqlAttractionPricesRepository(db)
-
+	bookmarkRepo := repository.NewMysqlBookmarkRepository(db)
 	attrRepo := repository.NewMysqlAttractionRepository(db)
 	attrPhotoRepo := repository.NewMysqlAttractionPhotoRepository(db)
-	attrSvc := service.NewAttractionSerivce(attrRepo, attrPhotoRepo, priceAttrRepo, opHourRepo, fileStorage, 20 * time.Second)
-	attrCtr := controller.NewAttractionController(attrSvc)
+
+	userSvc := service.NewUserService(userRepo, 12 * time.Second)
+	authSvc := service.NewAuthService()
+	artSvc := service.NewArticleService(artRepo, fileStorage, 20 * time.Second)
+	bookmarkSvc := service.NewBookmarkService(
+		bookmarkRepo, userRepo, attrRepo, attrPhotoRepo, priceAttrRepo, opHourRepo,
+	)
+	attrSvc := service.NewAttractionSerivce(
+		attrRepo, attrPhotoRepo, priceAttrRepo, opHourRepo, fileStorage, 20 * time.Second,
+	)
+
+	userCtr := controller.NewUserController(userSvc)
+	authCtr := controller.NewAuthController(userSvc, authSvc)
+	artCtr := controller.NewArticleController(artSvc)
+	attrCtr := controller.NewAttractionController(attrSvc, bookmarkSvc)
 
 	r := router{app, db, middleware.NewMiddleware(userSvc, authSvc)}
 
@@ -81,4 +85,9 @@ func (r *router) setupAttractionRoutes(ctr *controller.AttractionController) {
 	aR.PUT("/:id", ctr.UpdateAttraction)
 	aR.POST("/:id", ctr.UploadAttractionPhoto)
 	aR.DELETE("/:id", ctr.DeleteAttraction)
+
+	bR := aR.Group("/bookmarks")
+	bR.GET("", r.mdlwr.Auth(), ctr.GetBookmarkedByUser)
+	bR.POST("", r.mdlwr.Auth(), ctr.BookmarkAttraction)
+	bR.DELETE("", r.mdlwr.Auth())
 }
