@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/devanfer02/nosudes-be/domain"
 	"github.com/devanfer02/nosudes-be/utils/gmaps"
@@ -154,6 +154,8 @@ func (s *attractionService) InsertAttraction(ctx context.Context, attraction *do
 
 	for _, prd := range attraction.PriceDetails {
 		wgPr.Add(1)
+
+		prd.AttractionID = attraction.ID
 
 		go func(price domain.PriceDetails) {
 			defer wgPr.Done()

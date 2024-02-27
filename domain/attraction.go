@@ -37,6 +37,7 @@ type AttractionPayload struct {
 	Description    string            `json:"description" db:"description" binding:"required"`
 	OpeningHours   string            `json:"opening_hours" db:"opening_hours" binding:"required"`
 	MapsEmbedUrl   string            `json:"maps_embed_url" db:"maps_embed_url"`
+	Location       string            `json:"location" db:"location" binding:"required"`
 	OperationHours []*OperationHours `json:"operation_hours,omitempty" db:"-"`
 	PriceDetails   []*PriceDetails   `json:"price_details,omitempty" db:"-"`
 }
@@ -55,7 +56,7 @@ type PriceDetails struct {
 	AttractionID string `json:"-" db:"attraction_id"`
 	Price        int64  `json:"price" db:"price"`
 	DayType      string `json:"day_type,omitempty" db:"day_type"`
-	AgeGroup	 string `json:"age_group,omitempty" db:"age_group"`
+	AgeGroup     string `json:"age_group,omitempty" db:"age_group"`
 }
 
 type AttractionPhoto struct {
@@ -99,7 +100,7 @@ type OperationHoursRepository interface {
 
 type PriceDetailsRepository interface {
 	FetchByAttID(ctx context.Context, attractionId string) ([]PriceDetails, error)
-	InsertWithAttID(ctx context.Context, price *PriceDetails) error 
+	InsertWithAttID(ctx context.Context, price *PriceDetails) error
 }
 
 type AttractionService interface {

@@ -15,7 +15,6 @@ import (
 
 var (
 	migrationDownFile = "./bootstrap/database/mysql/migrations/down/drop_tables.sql"
-	migrationUpDir    = "./bootstrap/database/mysql/migrations/up"
 )
 
 func NewMysqlConn() *sqlx.DB {
@@ -39,7 +38,7 @@ func NewMysqlConn() *sqlx.DB {
 		logger.FatalLog(layers.Mysql, "could not ping to database", err)
 	}
 
-	migrateUp(db)
+	MigrateUp(db)
 
 	return db
 }
@@ -52,9 +51,13 @@ func DropAllTables(db *sqlx.DB) {
 	}
 
 	queries := strings.Split(string(content), ";")
-	fmt.Print(queries)
 
 	for _, query := range queries {
+
+		if len(query) == 0 {
+			continue
+		}
+
 		_, err = db.Exec(query)
 
 		if err != nil {
@@ -63,32 +66,40 @@ func DropAllTables(db *sqlx.DB) {
 	}
 }
 
-func migrateUp(db *sqlx.DB) {
-	migrationsFile := getMigrationsUpFile()
+func GenerateSeeders(db *sqlx.DB) {
+	seedersFile := getSqlFiles("./bootstrap/database/mysql/seeders")
+
+	for _, filename := range seedersFile {
+		executeQueryInFile(db, filename)
+	}
+}
+
+func MigrateUp(db *sqlx.DB) {
+	migrationsFile := getSqlFiles("./bootstrap/database/mysql/migrations/up")
 
 	for _, filename := range migrationsFile {
 		executeQueryInFile(db, filename)
 	}
 }
 
-func getMigrationsUpFile() []string {
+func getSqlFiles(path string) []string {
 
-	files, err := os.ReadDir(migrationUpDir)
+	files, err := os.ReadDir(path)
 
 	if err != nil {
-		logger.FatalLog(layers.Mysql, fmt.Sprintf("cant read directory %s", migrationUpDir), err)
+		logger.FatalLog(layers.Mysql, fmt.Sprintf("cant read directory %s", path), err)
 	}
 
-	migrationsFile := make([]string, 0)
+	sqlFiles := make([]string, 0)
 
 	for _, file := range files {
-		migrationsFile = append(
-			migrationsFile,
-			fmt.Sprintf("%s/%s", migrationUpDir, file.Name()),
+		sqlFiles = append(
+			sqlFiles,
+			fmt.Sprintf("%s/%s", path, file.Name()),
 		)
 	}
 
-	return migrationsFile
+	return sqlFiles
 }
 
 func executeQueryInFile(db *sqlx.DB, filename string) {

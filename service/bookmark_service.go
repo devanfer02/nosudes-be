@@ -10,9 +10,9 @@ import (
 )
 
 type bookmarkService struct {
-	bmRepo   domain.BookmarkRepository
-	userRepo domain.UserRepository
-	attrRepo domain.AttractionRepository
+	bmRepo        domain.BookmarkRepository
+	userRepo      domain.UserRepository
+	attrRepo      domain.AttractionRepository
 	attrPhotoRepo domain.AttractionPhotoRepository
 	attrPriceRepo domain.PriceDetailsRepository
 	opHourRepo    domain.OperationHoursRepository
@@ -24,13 +24,13 @@ func NewBookmarkService(
 	attrRepo domain.AttractionRepository,
 	attrPhotoRepo domain.AttractionPhotoRepository,
 	attrPriceRepo domain.PriceDetailsRepository,
-	opHourRepo    domain.OperationHoursRepository,
+	opHourRepo domain.OperationHoursRepository,
 ) domain.BookmarkService {
 	return &bookmarkService{bmRepo, userRepo, attrRepo, attrPhotoRepo, attrPriceRepo, opHourRepo}
 }
 
 func (s *bookmarkService) GetBookmarkedByUserID(ctx context.Context, userId string) ([]*domain.Attraction, error) {
-	c, cancel := context.WithTimeout(ctx, 12 * time.Second)
+	c, cancel := context.WithTimeout(ctx, 12*time.Second)
 	defer cancel()
 
 	attractions, err := s.bmRepo.GetBookmarkedByUserID(c, userId)
@@ -41,48 +41,26 @@ func (s *bookmarkService) GetBookmarkedByUserID(ctx context.Context, userId stri
 
 	var wg sync.WaitGroup
 
-	errs := make(chan error, len(attractions) * 3)
+	errChan := make(chan error, len(attractions) * 3)
 
 	for _, attraction := range attractions {
-		wg.Add(3) 
-
-		go func(attr *domain.Attraction) {
-			wg.Done()
-
-			attr.Photos, err = s.attrPhotoRepo.FetchPhotoUrlsByAttrID(c, attr.ID)
-
-			if err != nil {
-				errs <- err
-			}
-		}(attraction)
-
-		go func(attr *domain.Attraction) {
-			wg.Done()
-			
-			attr.Rating, err = gmaps.GetRatings(attr.Name)
-
-			if err != nil {
-				errs <- err
-			}
-		}(attraction)
-
-		go func(attr *domain.Attraction) {
-			wg.Done()
-
-			attr.PriceDetails, err = s.attrPriceRepo.FetchByAttID(c, attr.ID)
-
-			if err != nil {
-				errs <- err
-			}
+		wg.Add(1)
+		go func(attr *domain.Attraction){
+			defer wg.Done()
+			s.fetch(c, attr, errChan)
 		}(attraction)
 	}
 
 	go func() {
 		wg.Wait()
-		close(errs)
+		close(errChan)
 	}()
 
-	
+	for err := range errChan {
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return attractions, err
 }
@@ -128,9 +106,52 @@ func (s *bookmarkService) InsertBookmark(ctx context.Context, userId, attraction
 	return s.bmRepo.InsertBookmark(ctx, userId, attractionId)
 }
 
-func(s *bookmarkService) RemoveBookmark(ctx context.Context, userId, attractionId string) error {
-	c, cancel := context.WithTimeout(ctx, 10 * time.Second)
+func (s *bookmarkService) RemoveBookmark(ctx context.Context, userId, attractionId string) error {
+	c, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	return s.bmRepo.RemoveBookmark(c, userId, attractionId)
 }
+
+
+func (s *bookmarkService) fetch(c context.Context, attr *domain.Attraction, errChan chan error) {
+	var wg sync.WaitGroup 
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		photos, err := s.attrPhotoRepo.FetchPhotoUrlsByAttrID(c, attr.ID)
+
+		if err != nil {
+			errChan <- err
+		}
+		
+		attr.Photos = photos
+	}()
+
+	go func() {
+		defer wg.Done()
+		rating, err := gmaps.GetRatings(attr.Name)
+
+		if err != nil {
+			errChan <- err
+		}
+
+		attr.Rating = rating
+	}()
+
+	go func() {
+		defer wg.Done()
+		priceDetails, err := s.attrPriceRepo.FetchByAttID(c, attr.ID)
+
+		if err != nil {
+			errChan <- err
+		}
+
+		attr.PriceDetails = priceDetails
+	}()
+
+	wg.Wait()
+}
+

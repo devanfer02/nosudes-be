@@ -30,6 +30,7 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	bookmarkRepo := repository.NewMysqlBookmarkRepository(db)
 	attrRepo := repository.NewMysqlAttractionRepository(db)
 	attrPhotoRepo := repository.NewMysqlAttractionPhotoRepository(db)
+	reviewRepo := repository.NewMysqlReviewRepository(db)
 
 	userSvc := service.NewUserService(userRepo, 12 * time.Second)
 	authSvc := service.NewAuthService()
@@ -40,11 +41,13 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	attrSvc := service.NewAttractionSerivce(
 		attrRepo, attrPhotoRepo, priceAttrRepo, opHourRepo, fileStorage, 20 * time.Second,
 	)
+	reviewSvc := service.NewReviewService(reviewRepo, fileStorage, 15 * time.Second)
 
 	userCtr := controller.NewUserController(userSvc)
 	authCtr := controller.NewAuthController(userSvc, authSvc)
 	artCtr := controller.NewArticleController(artSvc)
 	attrCtr := controller.NewAttractionController(attrSvc, bookmarkSvc)
+	rvCtr := controller.NewReviewController(reviewSvc)
 
 	r := router{app, db, middleware.NewMiddleware(userSvc, authSvc)}
 
@@ -52,6 +55,7 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	r.setupAuthRoutes(authCtr)
 	r.setupArticleRoutes(artCtr)
 	r.setupAttractionRoutes(attrCtr)
+	r.setupReviewRoutes(rvCtr)
 }
 
 func (r *router) setupUserRoutes(ctr *controller.UserController) {
@@ -88,6 +92,15 @@ func (r *router) setupAttractionRoutes(ctr *controller.AttractionController) {
 
 	bR := aR.Group("/bookmarks")
 	bR.GET("", r.mdlwr.Auth(), ctr.GetBookmarkedByUser)
-	bR.POST("", r.mdlwr.Auth(), ctr.BookmarkAttraction)
-	bR.DELETE("", r.mdlwr.Auth())
+	bR.POST("/:attractionId", r.mdlwr.Auth(), ctr.BookmarkAttraction)
+	bR.DELETE("/:attractionId", r.mdlwr.Auth(), ctr.RemoveBookmark)
+}
+
+func (r *router) setupReviewRoutes(ctr *controller.ReviewController) {
+	rR := r.app.Group("/reviews")
+	rR.GET("", ctr.FetchAll)
+	rR.GET("/attractions/:attractionId", ctr.FetchByAttrID)
+	rR.GET("/:id", ctr.FetchByID)
+	rR.POST("", r.mdlwr.Auth(), ctr.CreateReview)
+	rR.DELETE("/:id", r.mdlwr.Auth(), ctr.DeleteReview)
 }
