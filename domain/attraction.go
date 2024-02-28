@@ -25,7 +25,8 @@ type Attraction struct {
 	OperationHours []OperationHours  `json:"operation_hours,omitempty" db:"-"`
 	PriceDetails   []PriceDetails    `json:"price_details,omitempty" db:"-"`
 	Photos         []AttractionPhoto `json:"attraction_photos,omitempty" db:"-"`
-	Rating         Ratings           `json:"ratings"`
+	WeatherInfo    []Weather		 `json:"weather_info,omitempty" db:"-"`
+	MapsDetail     MapsDetail        `json:"maps_detail"`
 	CreatedAt      time.Time         `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time         `json:"updated_at" db:"updated_at"`
 }
@@ -40,16 +41,6 @@ type AttractionPayload struct {
 	Location       string            `json:"location" db:"location" binding:"required"`
 	OperationHours []*OperationHours `json:"operation_hours,omitempty" db:"-"`
 	PriceDetails   []*PriceDetails   `json:"price_details,omitempty" db:"-"`
-}
-
-type GmapsRef struct {
-	Results []Ratings `json:"results"`
-}
-
-type Ratings struct {
-	Address      string  `json:"formatted_address"`
-	Rating       float64 `json:"rating"`
-	TotalRatings int64   `json:"user_ratings_total"`
 }
 
 type PriceDetails struct {

@@ -15,17 +15,15 @@ func main() {
 	mysqldb := mysql.NewMysqlConn()
 	defer mysqldb.Close()
 
-	if len(os.Args) > 1  {
+	if len(os.Args) > 1 {
 		switch os.Args[1] {
-		case "down" :
+		case "down":
 			mysql.DropAllTables(mysqldb)
 			mysql.MigrateUp(mysqldb)
 		case "seeders":
 			mysql.GenerateSeeders(mysqldb)
 		}
 	}
-
-	
 
 	if env.ProcEnv.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)

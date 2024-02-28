@@ -17,6 +17,7 @@ type Env struct {
 	DBPassword    		string `mapstructure:"DB_PASSWORD"`
 	DBName        		string `mapstructure:"DB_NAME"`
 	MapsAPIKey 			string `mapstructure:"GMAPS_API_KEY"`
+	WeatherAPIKey		string `mapstructure:"WEATHER_API_KEY"`
 	FirebaseConf 		string `mapstructure:"FIREBASE_CONFIG_PATH"`
 	FirebaseBucket 		string `mapstructure:"FIREBASE_BUCKET_NAME"`
 	ATSecret      		string `mapstructure:"ACCESS_TOKEN_SECRET"`

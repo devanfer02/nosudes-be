@@ -18,7 +18,7 @@ type User struct {
 }
 
 type UserPayload struct {
-	ID       string
+	ID       string	`json:"id"`
 	Fullname string `json:"fullname" valid:"required"`
 	Username string `json:"username" valid:"required"`
 	Email    string `json:"email" valid:"email"`

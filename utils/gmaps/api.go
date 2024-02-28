@@ -16,7 +16,7 @@ import (
 )
 
 
-func GetRatings(attractionName string) (domain.Ratings, error) {
+func GetRatings(attractionName string) (domain.MapsDetail, error) {
 	mapsEndpoint := fmt.Sprintf(
 		"https://maps.googleapis.com/maps/api/place/textsearch/json?query=%s&sensor=true&key=%s",
 		strings.ReplaceAll(attractionName, " ", "+"),
@@ -27,14 +27,14 @@ func GetRatings(attractionName string) (domain.Ratings, error) {
 
 	if err != nil {
 		logger.ErrLog(layers.Service, "failed to fetch api", err)
-		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
+		return domain.MapsDetail{}, domain.ErrFailedFetchOtherAPI
 	}
 
 	body, err := io.ReadAll(apiResp.Body)
 
 	if err != nil {
 		logger.ErrLog(layers.Service, "failed to read response body", err)
-		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
+		return domain.MapsDetail{}, domain.ErrFailedFetchOtherAPI
 	}
 
 	var gmapsRef domain.GmapsRef
@@ -43,7 +43,7 @@ func GetRatings(attractionName string) (domain.Ratings, error) {
 
 	if err != nil {
 		logger.ErrLog(layers.Service, "failed to unmarshal json", err)
-		return domain.Ratings{}, domain.ErrFailedFetchOtherAPI
+		return domain.MapsDetail{}, domain.ErrFailedFetchOtherAPI
 	}
 
 	return gmapsRef.Results[0], nil

@@ -132,13 +132,13 @@ func (s *bookmarkService) fetch(c context.Context, attr *domain.Attraction, errC
 
 	go func() {
 		defer wg.Done()
-		rating, err := gmaps.GetRatings(attr.Name)
+		detail, err := gmaps.GetRatings(attr.Name)
 
 		if err != nil {
 			errChan <- err
 		}
 
-		attr.Rating = rating
+		attr.MapsDetail = detail
 	}()
 
 	go func() {

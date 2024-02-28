@@ -7,6 +7,7 @@ import (
 
 	"github.com/devanfer02/nosudes-be/domain"
 	"github.com/devanfer02/nosudes-be/utils/gmaps"
+	"github.com/devanfer02/nosudes-be/utils/weather"
 )
 
 const ATTRACTION_CLOUD_STORE_DIR = "attractions"
@@ -43,7 +44,7 @@ func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction,
 
 	var wg sync.WaitGroup
 
-	errChan := make(chan error, len(attractions) * 3)
+	errChan := make(chan error, len(attractions) * 4)
 
 	for _, attraction := range attractions {
 		wg.Add(1)
@@ -265,6 +266,7 @@ func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, er
 
 		if err != nil {
 			errChan <- err
+			return
 		}
 		
 		attr.Photos = photos
@@ -272,13 +274,14 @@ func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, er
 
 	go func() {
 		defer wg.Done()
-		rating, err := gmaps.GetRatings(attr.Name)
+		detail, err := gmaps.GetRatings(attr.Name)
 
 		if err != nil {
 			errChan <- err
+			return 
 		}
 
-		attr.Rating = rating
+		attr.MapsDetail = detail
 	}()
 
 	go func() {
@@ -287,11 +290,33 @@ func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, er
 
 		if err != nil {
 			errChan <- err
+			return
 		}
 
 		attr.PriceDetails = priceDetails
 	}()
 
 	wg.Wait()
+
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		
+		weatherInfo, err := weather.GetWeatherInfo(
+			attr.MapsDetail.GeometryInfo.Loc.Lat, 
+			attr.MapsDetail.GeometryInfo.Loc.Lng, 
+		)
+
+		if err != nil {
+			errChan <- err 
+			return 
+		}
+
+		attr.WeatherInfo = weatherInfo
+	}()
+
+	wg.Wait()
+
 }
 
