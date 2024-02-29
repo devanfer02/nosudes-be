@@ -67,7 +67,7 @@ func(m *mysqlAttractionRepository) FetchByID(ctx context.Context, id string) (*d
 func(m *mysqlAttractionRepository) InsertAttraction(ctx context.Context, attraction *domain.AttractionPayload) error {
 	query := `INSERT INTO 
 	attractions (attraction_id, name, category_id, description, opening_hours, maps_embed_url, location, created_at, updated_at) 
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	currTime := helpers.CurrentTime()
 
