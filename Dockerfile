@@ -10,7 +10,7 @@ COPY . .
 
 RUN go mod tidy
 
-RUN go build -o main ./app
+RUN go build app/main.go
 
 EXPOSE 8060
 

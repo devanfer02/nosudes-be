@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS operation_hours (
     day VARCHAR(255) NOT NULL,
     day_index INTEGER,
     timespan VARCHAR(255) NOT NULL,
-    FOREIGN KEY(attraction_id) REFERENCES attraction(attraction_id) ON DELETE CASCADE
+    FOREIGN KEY(attraction_id) REFERENCES attractions(attraction_id) ON DELETE CASCADE
 ) Engine = InnoDB;

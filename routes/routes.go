@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/devanfer02/nosudes-be/bootstrap/firebase"
+	"github.com/devanfer02/nosudes-be/bootstrap"
 	"github.com/devanfer02/nosudes-be/controller"
 	"github.com/devanfer02/nosudes-be/middleware"
 	"github.com/devanfer02/nosudes-be/repository"
@@ -50,6 +51,8 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	rvCtr := controller.NewReviewController(reviewSvc)
 
 	r := router{app, db, middleware.NewMiddleware(userSvc, authSvc)}
+
+	r.app.GET("/heatlh", bootstrap.GetHealthCheck())
 
 	r.setupUserRoutes(userCtr)
 	r.setupAuthRoutes(authCtr)
