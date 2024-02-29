@@ -10,8 +10,8 @@ COPY . .
 
 RUN go mod tidy
 
-RUN go build -o main
+RUN go build -o main ./app
 
 EXPOSE 8060
 
-ENTRYPOINT ["/app/main"]
+ENTRYPOINT ["./app/main"]
