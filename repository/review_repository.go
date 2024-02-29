@@ -32,7 +32,7 @@ func (m *mysqlReviewRepository) fetch(ctx context.Context, query string, args ..
 }
 
 func (m *mysqlReviewRepository) FetchAll(ctx context.Context) ([]*domain.Review, error) {
-	query := `SELECT * FROM review`
+	query := `SELECT * FROM reviews`
 
 	reviews, err := m.fetch(ctx, query)
 
@@ -44,9 +44,9 @@ func (m *mysqlReviewRepository) FetchAll(ctx context.Context) ([]*domain.Review,
 }
 
 func (m *mysqlReviewRepository) FetchByAttrID(ctx context.Context, attractionId string) ([]*domain.Review, error) {
-	query := `SELECT * FROM review WHERE attraction_id = ?`
+	query := `SELECT * FROM reviews WHERE attraction_id = ?`
 
-	reviews, err := m.fetch(ctx, query)
+	reviews, err := m.fetch(ctx, query, attractionId)
 
 	if err != nil {
 		return nil, err
@@ -56,32 +56,32 @@ func (m *mysqlReviewRepository) FetchByAttrID(ctx context.Context, attractionId 
 }
 
 func (m *mysqlReviewRepository) FetchByID(ctx context.Context, id string) (*domain.Review, error) {
-	query := `SELECT * FROM review WHERE id = ?`
+	query := `SELECT * FROM reviews WHERE review_id = ?`
 
-	reviews, err := m.fetch(ctx, query)
+	reviews, err := m.fetch(ctx, query, id)
 
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	if len(reviews) == 0 {
 		return nil, domain.ErrNotFound
 	}
 
-	return reviews[0], nil 
+	return reviews[0], nil
 }
 
 func (m *mysqlReviewRepository) InsertReview(ctx context.Context, review *domain.ReviewPayload) error {
 
 	query := `INSERT INTO reviews 
-	(id, attraction_id, user_id, review_text, photo_url, date_created) 
+	(review_id, attraction_id, user_id, review_text, photo_url, date_created) 
 	VALUES (?, ?, ?, ?, ?, ?)`
 
 	return execStatement(
-		m.Conn, 
-		ctx, 
-		query, 
-		review.ID, review.AttractionID, 
+		m.Conn,
+		ctx,
+		query,
+		review.ID, review.AttractionID,
 		review.UserID, review.ReviewText, review.PhotoURL,
 		review.DateCreated,
 	)
@@ -91,9 +91,9 @@ func (m *mysqlReviewRepository) DeleteReview(ctx context.Context, reviewId strin
 	query := `DELETE FROM reviews WHERE review_id = ?`
 
 	return execStatement(
-		m.Conn, 
-		ctx, 
-		query, 
+		m.Conn,
+		ctx,
+		query,
 		reviewId,
 	)
 }

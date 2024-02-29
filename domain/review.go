@@ -2,29 +2,31 @@ package domain
 
 import (
 	"context"
-	"time"
 	"mime/multipart"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type Review struct {
-	ID           string `json:"review_id" db:"review_id"`
-	AttractionID string `json:"-" db:"attraction_id"`
-	UserID       string `json:"-" db:"user_id"`
-	ReviewText   string `json:"review_text" db:"review_text"`
-	PhotoURL     string `json:"photo_url" db:"photp_url"`
-	DateCreated  string `json:"date_created" db:"date_created"`
+	ID           string     `json:"review_id" db:"review_id"`
+	AttractionID string     `json:"attraction_id" db:"attraction_id"`
+	UserID       string     `json:"user_id" db:"user_id"`
+	ReviewText   string     `json:"review_text" db:"review_text"`
+	PhotoURL     string     `json:"photo_url" db:"photo_url"`
+	DateCreated  string     `json:"date_created" db:"date_created"`
+	UserDetail   User       `json:"user_detail" db:"-"`
+	AttrDetail   Attraction `json:"attraction_detail" db:"-"`
 }
 
 type ReviewPayload struct {
-	ID           string 				`db:"review_id"`
-	AttractionID string 				`json:"-" db:"attraction_id"`
-	UserID       string 				`json:"-" db:"user_id"`
-	ReviewText   string 				`form:"review_text" binding:"required" valid:"required, stringlength(2|400)" db:"review_text"`
-	PhotoURL     string 				`form:"-" db:"photp_url"`
-	DateCreated  string 				`form:"-" db:"date_created"`
-	PhotoFile	 *multipart.FileHeader	`form:"photo" db:"-"`
+	ID           string                `db:"review_id" json:"id"`
+	AttractionID string                `json:"attraction_id" db:"attraction_id" form:"-"`
+	UserID       string                `json:"user_id" db:"user_id" form:"-"`
+	ReviewText   string                `form:"review_text" binding:"required" valid:"required, stringlength(2|400)" db:"review_text" json:"review_text"`
+	PhotoURL     string                `form:"-" db:"photo_url" json:"photo_url"`
+	DateCreated  string                `form:"-" db:"date_created" json:"date_created"`
+	PhotoFile    *multipart.FileHeader `form:"photo" db:"-" json:"-"`
 }
 
 type ReviewRepository interface {

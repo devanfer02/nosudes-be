@@ -26,7 +26,7 @@ type Attraction struct {
 	PriceDetails   []PriceDetails    `json:"price_details,omitempty" db:"-"`
 	Photos         []AttractionPhoto `json:"attraction_photos,omitempty" db:"-"`
 	WeatherInfo    []Weather		 `json:"weather_info,omitempty" db:"-"`
-	MapsDetail     MapsDetail        `json:"maps_detail"`
+	MapsDetail     *MapsDetail       `json:"maps_detail,omitempty"`
 	CreatedAt      time.Time         `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time         `json:"updated_at" db:"updated_at"`
 }

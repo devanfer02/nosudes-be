@@ -41,7 +41,7 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	attrSvc := service.NewAttractionSerivce(
 		attrRepo, attrPhotoRepo, priceAttrRepo, opHourRepo, fileStorage, 20 * time.Second,
 	)
-	reviewSvc := service.NewReviewService(reviewRepo, fileStorage, 15 * time.Second)
+	reviewSvc := service.NewReviewService(reviewRepo, userRepo, attrRepo, fileStorage, 15 * time.Second)
 
 	userCtr := controller.NewUserController(userSvc)
 	authCtr := controller.NewAuthController(userSvc, authSvc)
@@ -62,6 +62,7 @@ func (r *router) setupUserRoutes(ctr *controller.UserController) {
 	uR := r.app.Group("/users")
 	uR.GET("", ctr.FetchAll)
 	uR.GET("/:id", ctr.FetchByID)
+	uR.GET("/profile",r.mdlwr.Auth(), ctr.FetchProfile)
 	uR.PUT("", r.mdlwr.Auth(), ctr.UpdateUser)
 	uR.DELETE("", r.mdlwr.Auth(), ctr.DeleteUser)
 }
@@ -71,6 +72,7 @@ func (r *router) setupAuthRoutes(ctr *controller.AuthController) {
 	aR.POST("/register", ctr.RegisterUser)
 	aR.POST("/login", ctr.LoginUser)
 }
+
 
 func (r *router) setupArticleRoutes(ctr *controller.ArticleController) {
 	aR := r.app.Group("/articles")
@@ -101,6 +103,6 @@ func (r *router) setupReviewRoutes(ctr *controller.ReviewController) {
 	rR.GET("", ctr.FetchAll)
 	rR.GET("/attractions/:attractionId", ctr.FetchByAttrID)
 	rR.GET("/:id", ctr.FetchByID)
-	rR.POST("", r.mdlwr.Auth(), ctr.CreateReview)
+	rR.POST("/:attractionId", r.mdlwr.Auth(), ctr.CreateReview)
 	rR.DELETE("/:id", r.mdlwr.Auth(), ctr.DeleteReview)
 }

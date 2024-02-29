@@ -73,6 +73,8 @@ func (s *userService) UpdateUser(ctx context.Context, user *domain.UserPayload) 
 		return domain.ErrForbidden
 	}
 
+	user.DefaultWithID()
+
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -85,7 +87,17 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	err := s.repo.DeleteUser(c, id)
+	userDb, err := s.FetchByID(ctx, id)
+
+	if err != nil {
+		return err 
+	}
+
+	if userDb.ID != id {
+		return domain.ErrForbidden
+	}
+
+	err = s.repo.DeleteUser(c, id)
 
 	return err
 }

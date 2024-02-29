@@ -58,7 +58,7 @@ func (s *bookmarkService) GetBookmarkedByUserID(ctx context.Context, userId stri
 
 	for err := range errChan {
 		if err != nil {
-			return nil, err
+			return attractions, err
 		}
 	}
 
@@ -138,7 +138,7 @@ func (s *bookmarkService) fetch(c context.Context, attr *domain.Attraction, errC
 			errChan <- err
 		}
 
-		attr.MapsDetail = detail
+		attr.MapsDetail = &detail
 	}()
 
 	go func() {

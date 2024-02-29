@@ -61,7 +61,7 @@ func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction,
 
 	for err := range errChan {
 		if err != nil {
-			return nil, err
+			return attractions, err
 		}
 	}
 
@@ -281,7 +281,7 @@ func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, er
 			return 
 		}
 
-		attr.MapsDetail = detail
+		attr.MapsDetail = &detail
 	}()
 
 	go func() {

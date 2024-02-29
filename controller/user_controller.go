@@ -40,6 +40,20 @@ func(c *UserController) FetchByID(ctx *gin.Context) {
 	resp.SendResp(ctx, code, "successfully fetch data by id", user, nil)
 }
 
+func (c *UserController) FetchProfile(ctx *gin.Context) {
+	idAuth := ctx.GetString("user")
+
+	user, err := c.svc.FetchByID(ctx.Request.Context(), idAuth)
+	code := domain.GetCode(err)
+
+	if err != nil {
+		resp.SendResp(ctx, code, "failed to fetch data", nil, err)
+		return 
+	}
+
+	resp.SendResp(ctx, code, "successfully fetch data by id", user, nil)
+}
+
 func(c *UserController) UpdateUser(ctx *gin.Context) {
 	idParam := ctx.GetString("user")
 	user := domain.UserPayload{}
@@ -58,7 +72,7 @@ func(c *UserController) UpdateUser(ctx *gin.Context) {
 		return 
 	}
 
-	resp.SendResp(ctx, code, "successfully update user", user, nil)
+	resp.SendResp(ctx, code, "successfully update user", nil, nil)
 }
 
 func(c *UserController) DeleteUser(ctx *gin.Context) {
