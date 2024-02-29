@@ -71,6 +71,18 @@ func (m *mysqlReviewRepository) FetchByID(ctx context.Context, id string) (*doma
 	return reviews[0], nil
 }
 
+func (m *mysqlReviewRepository) LikeReview(ctx context.Context, reviewId, userId string) error {
+	query := `INSERT INTO review_likes (review_id, user_id) VALUES (?, ?)`
+
+	return execStatement(m.Conn, ctx, query, reviewId, userId)
+}
+
+func (m *mysqlReviewRepository) UnlikeReview(ctx context.Context, reviewId, userId string) error {
+	query := `DELETE FROM review_likes WHERE review_id = ? AND user_id = ?`
+
+	return execStatement(m.Conn, ctx, query, reviewId, userId)
+}
+
 func (m *mysqlReviewRepository) InsertReview(ctx context.Context, review *domain.ReviewPayload) error {
 
 	query := `INSERT INTO reviews 

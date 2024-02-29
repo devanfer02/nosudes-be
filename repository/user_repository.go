@@ -38,7 +38,14 @@ func (m *mysqlUserRepository) FetchAll(ctx context.Context) ([]domain.User, erro
 }
 
 func (m *mysqlUserRepository) FetchOneByArg(ctx context.Context, param, arg string) (domain.User, error) {
-	query := fmt.Sprintf("SELECT * FROM users WHERE %s = ? LIMIT 1", param)
+	query := fmt.Sprintf(
+		`SELECT u.*, COUNT(r.review_id) AS total_reviews, COUNT(rl.review_id) AS total_likes 
+		FROM users u
+		LEFT JOIN reviews r ON u.user_id = r.user_id 
+		LEFT JOIN review_likes rl ON rl.review_id = r.review_id
+		WHERE u.%s = ? 
+		GROUP BY u.user_id`, param,
+	)
 
 	user := domain.User{}
 
@@ -63,8 +70,16 @@ func (m *mysqlUserRepository) InsertUser(ctx context.Context, user *domain.UserP
 		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	currTime := helper.CurrentTime()
-	
+
 	return execStatement(m.Conn, ctx, query, user.ID, user.Fullname, user.Username, user.Email, user.Password, currTime, currTime)
+}
+
+func (m *mysqlUserRepository) UpdatePP(ctx context.Context, photo *domain.UserPhotoPayload) error {
+	query := `UPDATE users SET photo_url = ?, updated_at = ? WHERE user_id = ?`
+
+	currTime := helper.CurrentTime()
+
+	return execStatement(m.Conn, ctx, query, photo.PhotoURL, currTime, photo.UserID)
 }
 
 func (m *mysqlUserRepository) UpdateUser(ctx context.Context, user *domain.UserPayload) error {

@@ -215,6 +215,31 @@ func(s *reviewService) InsertReview(ctx context.Context, review *domain.ReviewPa
 	return err
 }
 
+func (s *reviewService) LikeReview(ctx context.Context, reviewId, userId string) error {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	_, err := s.rvRepo.FetchByID(ctx, reviewId)
+
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	err = s.rvRepo.LikeReview(c, reviewId, userId)
+
+	return err 
+}
+
+func (s *reviewService) UnlikeReview(ctx context.Context, reviewId, userId string) error  {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	err := s.rvRepo.UnlikeReview(c, reviewId, userId)
+
+	return err 
+}
+
+
 func(s *reviewService) DeleteReview(ctx context.Context, reviewId, userId string) error {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()

@@ -33,7 +33,7 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 	attrPhotoRepo := repository.NewMysqlAttractionPhotoRepository(db)
 	reviewRepo := repository.NewMysqlReviewRepository(db)
 
-	userSvc := service.NewUserService(userRepo, 12 * time.Second)
+	userSvc := service.NewUserService(userRepo, fileStorage,12 * time.Second)
 	authSvc := service.NewAuthService()
 	artSvc := service.NewArticleService(artRepo, fileStorage, 20 * time.Second)
 	bookmarkSvc := service.NewBookmarkService(
@@ -52,7 +52,7 @@ func InitRouter(app *gin.Engine, db *sqlx.DB) {
 
 	r := router{app, db, middleware.NewMiddleware(userSvc, authSvc)}
 
-	r.app.GET("/heatlh", bootstrap.GetHealthCheck())
+	r.app.GET("/health", bootstrap.GetHealthCheck(r.db.DB))
 
 	r.setupUserRoutes(userCtr)
 	r.setupAuthRoutes(authCtr)
@@ -65,7 +65,8 @@ func (r *router) setupUserRoutes(ctr *controller.UserController) {
 	uR := r.app.Group("/users")
 	uR.GET("", ctr.FetchAll)
 	uR.GET("/:id", ctr.FetchByID)
-	uR.GET("/profile",r.mdlwr.Auth(), ctr.FetchProfile)
+	uR.GET("/profile", r.mdlwr.Auth(), ctr.FetchProfile)
+	uR.POST("/photo", r.mdlwr.Auth(), ctr.UploadPhotoProfile)
 	uR.PUT("", r.mdlwr.Auth(), ctr.UpdateUser)
 	uR.DELETE("", r.mdlwr.Auth(), ctr.DeleteUser)
 }
@@ -75,7 +76,6 @@ func (r *router) setupAuthRoutes(ctr *controller.AuthController) {
 	aR.POST("/register", ctr.RegisterUser)
 	aR.POST("/login", ctr.LoginUser)
 }
-
 
 func (r *router) setupArticleRoutes(ctr *controller.ArticleController) {
 	aR := r.app.Group("/articles")
@@ -108,4 +108,8 @@ func (r *router) setupReviewRoutes(ctr *controller.ReviewController) {
 	rR.GET("/:id", ctr.FetchByID)
 	rR.POST("/:attractionId", r.mdlwr.Auth(), ctr.CreateReview)
 	rR.DELETE("/:id", r.mdlwr.Auth(), ctr.DeleteReview)
+
+	lR := rR.Group("/likes")
+	lR.POST("/:reviewId", r.mdlwr.Auth(), ctr.LikeReview)
+	lR.DELETE("/:reviewId", r.mdlwr.Auth(), ctr.UnlikeReview)
 }

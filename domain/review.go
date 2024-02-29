@@ -33,6 +33,8 @@ type ReviewRepository interface {
 	FetchAll(ctx context.Context) ([]*Review, error)
 	FetchByAttrID(ctx context.Context, attractionId string) ([]*Review, error)
 	FetchByID(ctx context.Context, id string) (*Review, error)
+	LikeReview(ctx context.Context, reviewId, userId string) error
+	UnlikeReview(ctx context.Context, reviewId, userId string) error 
 	InsertReview(ctx context.Context, review *ReviewPayload) error
 	DeleteReview(ctx context.Context, reviewId string) error
 }
@@ -41,6 +43,8 @@ type ReviewService interface {
 	FetchAll(ctx context.Context) ([]*Review, error)
 	FetchByAttrID(ctx context.Context, attractionId string) ([]*Review, error)
 	FetchByID(ctx context.Context, id string) (*Review, error)
+	LikeReview(ctx context.Context, reviewId, userId string) error
+	UnlikeReview(ctx context.Context, reviewId, userId string) error 
 	InsertReview(ctx context.Context, review *ReviewPayload) error
 	DeleteReview(ctx context.Context, reviewId, userId string) error
 }

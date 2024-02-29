@@ -78,6 +78,36 @@ func (c *ReviewController) CreateReview(ctx *gin.Context) {
 	resp.SendResp(ctx, 201, "successfully create review", review, err)
 }
 
+func (c *ReviewController) LikeReview(ctx *gin.Context ) {
+	reviewId := ctx.Param("reviewId")
+	userId := ctx.GetString("user")
+
+	err := c.rvSvc.LikeReview(ctx, reviewId, userId)
+	code := domain.GetCode(err)
+
+	if err != nil {
+		resp.SendResp(ctx, code, "failed to like review", nil, nil)
+		return 
+	}
+
+	resp.SendResp(ctx, code, "successfully like review", nil, nil)
+}
+
+func (c *ReviewController) UnlikeReview(ctx *gin.Context) {
+	reviewId := ctx.Param("reviewId")
+	userId := ctx.GetString("user")
+
+	err := c.rvSvc.UnlikeReview(ctx, reviewId, userId)
+	code := domain.GetCode(err)
+
+	if err != nil {
+		resp.SendResp(ctx, code, "failed to unlike review", nil, nil)
+		return 
+	}
+
+	resp.SendResp(ctx, code, "successfully unlike review", nil, nil)
+}
+
 func (c *ReviewController) DeleteReview(ctx *gin.Context) {
 	id := ctx.Param("id")
 	userId := ctx.GetString("user")

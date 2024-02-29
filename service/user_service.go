@@ -8,13 +8,16 @@ import (
 	"github.com/devanfer02/nosudes-be/domain"
 )
 
+const USERS_CLOUD_STORE_DIR = "attractions"
+
 type userService struct {
 	repo    domain.UserRepository
+	file    domain.FileStorage
 	timeout time.Duration
 }
 
-func NewUserService(repo domain.UserRepository, timeout time.Duration) domain.UserService {
-	return &userService{repo, timeout}
+func NewUserService(repo domain.UserRepository, file domain.FileStorage, timeout time.Duration) domain.UserService {
+	return &userService{repo, file, timeout}
 }
 
 func (s *userService) FetchAll(ctx context.Context) ([]domain.User, error) {
@@ -58,6 +61,23 @@ func (s *userService) InsertUser(ctx context.Context, user *domain.UserPayload) 
 	return err
 }
 
+func (s *userService) UploadPP(ctx context.Context, photo *domain.UserPhotoPayload) error {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	url, err := s.file.UploadFile(USERS_CLOUD_STORE_DIR, photo.PhotoProfile)
+
+	if err != nil {
+		return err
+	}
+
+	photo.PhotoURL = url
+
+	err = s.repo.UpdatePP(c, photo)
+
+	return err 
+}
+
 func (s *userService) UpdateUser(ctx context.Context, user *domain.UserPayload) error {
 	if _, err := valid.ValidateStruct(user); err != nil {
 		return err
@@ -66,7 +86,7 @@ func (s *userService) UpdateUser(ctx context.Context, user *domain.UserPayload) 
 	userDb, err := s.FetchByID(ctx, user.ID)
 
 	if err != nil {
-		return err 
+		return err
 	}
 
 	if userDb.ID != user.ID {
@@ -90,7 +110,7 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 	userDb, err := s.FetchByID(ctx, id)
 
 	if err != nil {
-		return err 
+		return err
 	}
 
 	if userDb.ID != id {
@@ -101,5 +121,3 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 
 	return err
 }
-
-

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/url"
 	filepath "path/filepath"
 	"strings"
@@ -73,6 +74,26 @@ func (f *FirebaseStorage) UploadFile(dir string, file *multipart.FileHeader) (st
 		return "", err
 	}
 	defer src.Close()
+
+	buff := make([]byte, 512)
+
+	if _, err := src.Read(buff); err != nil {
+		return "", err
+	}
+
+	imgType := http.DetectContentType(buff)
+	isImage := false
+
+	for _, fixedType := range metadata {
+		if imgType == fixedType {
+			isImage = true
+			break
+		}
+	}
+
+	if !isImage {
+		return "", domain.ErrInvalidFileType
+	}
 
 	uuid := uuid.New().String()
 
