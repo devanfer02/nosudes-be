@@ -32,8 +32,8 @@ func(m *mysqlAttractionPricesRepository) FetchByAttID(ctx context.Context, attra
 
 func(m *mysqlAttractionPricesRepository) InsertWithAttID(ctx context.Context, price *domain.PriceDetails) error  {
 	query := `INSERT INTO attraction_ticket_prices 
-		(attraction_id, price, day_type, age_group)
-		VALUES (?, ?, ?, ?)`
+		(attraction_id, price, day_type, age_group, park_type)
+		VALUES (?, ?, ?, ?, ?)`
 
-	return execStatement(m.Conn, ctx, query, price.AttractionID, price.Price, price.DayType, price.AgeGroup)
+	return execStatement(m.Conn, ctx, query, price.AttractionID, price.Price, price.DayType, price.AgeGroup, price.ParkType)
 }

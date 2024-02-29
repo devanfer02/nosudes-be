@@ -45,9 +45,10 @@ type AttractionPayload struct {
 
 type PriceDetails struct {
 	AttractionID string `json:"-" db:"attraction_id"`
-	Price        int64  `json:"price" db:"price"`
+	Price        int64  `json:"price" db:"price" binding:"required"`
 	DayType      string `json:"day_type,omitempty" db:"day_type"`
 	AgeGroup     string `json:"age_group,omitempty" db:"age_group"`
+	ParkType	 string	`json:"park_type,omitempty" db:"park_type"`
 }
 
 type AttractionPhoto struct {
