@@ -24,7 +24,7 @@ func(m *mysqlAttractionRepository) FetchAll(ctx context.Context) ([]*domain.Attr
 	query := `SELECT 
 		a.attraction_id AS attraction_id, 
 		a.name, ac.category_name AS category,
-		description, opening_hours, maps_embed_url
+		description, opening_hours, maps_embed_url, location
 		FROM attractions a JOIN attraction_categories ac
 		ON a.category_id = ac.category_id`
 
@@ -44,7 +44,7 @@ func(m *mysqlAttractionRepository) FetchByID(ctx context.Context, id string) (*d
 	query := `SELECT 
 		a.attraction_id AS attraction_id, 
 		a.name, ac.category_name AS category,
-		description, opening_hours, maps_embed_url
+		description, opening_hours, maps_embed_url, location
 		FROM attractions a JOIN attraction_categories ac
 		ON a.category_id = ac.category_id
 		WHERE attraction_id = ?`

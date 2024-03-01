@@ -22,7 +22,7 @@ func (m *mysqlBookmarkRepository) GetBookmarkedByUserID(ctx context.Context, use
 	query := `SELECT 
 		a.attraction_id AS attraction_id, 
 		a.name, ac.category_name AS category,
-		description, opening_hours, maps_embed_url
+		description, opening_hours, maps_embed_url, location
 		FROM attractions a JOIN attraction_categories ac
 		ON a.category_id = ac.category_id JOIN bookmarks b ON b.user_id = ?`
 

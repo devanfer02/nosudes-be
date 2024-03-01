@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"net/url"
 	filepath "path/filepath"
 	"strings"
