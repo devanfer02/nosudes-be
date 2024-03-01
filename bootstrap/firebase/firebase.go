@@ -75,26 +75,6 @@ func (f *FirebaseStorage) UploadFile(dir string, file *multipart.FileHeader) (st
 	}
 	defer src.Close()
 
-	buff := make([]byte, 512)
-
-	if _, err := src.Read(buff); err != nil {
-		return "", err
-	}
-
-	imgType := http.DetectContentType(buff)
-	isImage := false
-
-	for _, fixedType := range metadata {
-		if imgType == fixedType {
-			isImage = true
-			break
-		}
-	}
-
-	if !isImage {
-		return "", domain.ErrInvalidFileType
-	}
-
 	uuid := uuid.New().String()
 
 	filename := dir + "/" + currTime + "_" + uuid + filepath.Ext(file.Filename)
