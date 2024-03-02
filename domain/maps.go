@@ -20,3 +20,9 @@ type Location struct {
 	Lat float64 `json:"lat"`
 	Lng float64 `json:"lng"`
 }
+
+type DistanceMatrix struct {
+	DistanceValue 	int64
+	DistanceText	string 
+	DurationText	string 
+}

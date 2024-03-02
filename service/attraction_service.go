@@ -32,7 +32,7 @@ func NewAttractionSerivce(
 	return &attractionService{attrRepo, attrPhotoRepo, attrPriceRepo, opHourRepo, fileStore, timeout}
 }
 
-func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction, error) {
+func (s *attractionService) FetchAll(ctx context.Context, query *domain.LocQuery) ([]*domain.Attraction, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -44,13 +44,13 @@ func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction,
 
 	var wg sync.WaitGroup
 
-	errChan := make(chan error, len(attractions) * 4)
+	errChan := make(chan error, len(attractions) * 5)
 
 	for _, attraction := range attractions {
 		wg.Add(1)
 		go func(attr *domain.Attraction){
 			defer wg.Done()
-			s.fetch(c, attr, errChan)
+			s.fetch(c, attr, errChan, query)
 		}(attraction)
 	}
 
@@ -68,7 +68,7 @@ func (s *attractionService) FetchAll(ctx context.Context) ([]*domain.Attraction,
 	return attractions, err
 }
 
-func (s *attractionService) FetchByID(ctx context.Context, id string) (*domain.Attraction, error) {
+func (s *attractionService) FetchByID(ctx context.Context, id string, query *domain.LocQuery) (*domain.Attraction, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -80,12 +80,12 @@ func (s *attractionService) FetchByID(ctx context.Context, id string) (*domain.A
 
 	var wg sync.WaitGroup
 
-	errChan := make(chan error, 4)
+	errChan := make(chan error, 5)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		s.fetch(c, attraction, errChan)
+		s.fetch(c, attraction, errChan, query)
 	}()
 
 	go func() {
@@ -255,7 +255,12 @@ func (s *attractionService) DeleteAttraction(ctx context.Context, id string) err
 	return err
 }
 
-func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, errChan chan error) {
+func (s *attractionService) fetch(
+	c context.Context, 
+	attr *domain.Attraction, 
+	errChan chan error, 
+	query *domain.LocQuery,
+) {
 	var wg sync.WaitGroup 
 
 	wg.Add(3)
@@ -318,5 +323,23 @@ func (s *attractionService) fetch(c context.Context, attr *domain.Attraction, er
 
 	wg.Wait()
 
-}
+	if query == nil {
+		return 
+	}
 
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+
+		dst, err := gmaps.GetDistance(attr, query)
+
+		if err != nil {
+			errChan <- err
+		}
+
+		attr.DistanceValue = dst.DistanceValue
+	}()
+
+	wg.Wait()
+}

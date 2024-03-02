@@ -1,20 +1,19 @@
 package gmaps
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
-	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/devanfer02/nosudes-be/bootstrap/env"
+	"github.com/devanfer02/nosudes-be/domain"
 	"github.com/devanfer02/nosudes-be/utils/layers"
 	"github.com/devanfer02/nosudes-be/utils/logger"
-	"github.com/devanfer02/nosudes-be/domain"
 
-
+	"github.com/umahmood/haversine"
 )
-
 
 func GetRatings(attractionName string) (domain.MapsDetail, error) {
 	mapsEndpoint := fmt.Sprintf(
@@ -47,4 +46,19 @@ func GetRatings(attractionName string) (domain.MapsDetail, error) {
 	}
 
 	return gmapsRef.Results[0], nil
+}
+
+func GetDistance(attr *domain.Attraction, query *domain.LocQuery) (domain.DistanceMatrix, error) {
+	start := haversine.Coord{Lat: query.UserLat, Lon: query.UserLng}
+	dest := haversine.Coord{Lat: attr.MapsDetail.GeometryInfo.Loc.Lat, Lon: attr.MapsDetail.GeometryInfo.Loc.Lng}
+
+	_, distanceKM := haversine.Distance(start, dest)
+
+	dst := domain.DistanceMatrix{}
+
+	fmt.Println(distanceKM)
+
+	dst.DistanceValue = int64(distanceKM)
+
+	return dst, nil
 }

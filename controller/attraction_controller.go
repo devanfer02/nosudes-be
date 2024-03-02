@@ -17,7 +17,9 @@ func NewAttractionController(attrSvc domain.AttractionService, bmSvc domain.Book
 }
 
 func (c *AttractionController) FetchAll(ctx *gin.Context) {
-	attractions, err := c.attrSvc.FetchAll(ctx.Request.Context())
+	query := getLocQuery(ctx)
+
+	attractions, err := c.attrSvc.FetchAll(ctx.Request.Context(), query)
 	code := domain.GetCode(err)
 
 	if err != nil {
@@ -30,8 +32,9 @@ func (c *AttractionController) FetchAll(ctx *gin.Context) {
 
 func (c *AttractionController) FetchByID(ctx *gin.Context) {
 	idParam := ctx.Param("id")
+	query := getLocQuery(ctx)
 
-	attraction, err := c.attrSvc.FetchByID(ctx.Request.Context(), idParam)
+	attraction, err := c.attrSvc.FetchByID(ctx.Request.Context(), idParam, query)
 	code := domain.GetCode(err)
 
 	if err != nil {

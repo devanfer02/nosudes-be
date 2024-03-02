@@ -15,20 +15,21 @@ import (
 )
 
 type Attraction struct {
-	ID             string            `json:"id" db:"attraction_id"`
-	Name           string            `json:"name" db:"name"`
-	Category       string            `json:"category" db:"category"`
-	Description    string            `json:"description" db:"description"`
-	OpeningHours   string            `json:"opening_hours" db:"opening_hours"`
-	MapsEmbedUrl   string            `json:"maps_embed_url" db:"maps_embed_url"`
-	Location       string            `json:"location" db:"location"`
-	OperationHours []OperationHours  `json:"operation_hours,omitempty" db:"-"`
-	PriceDetails   []PriceDetails    `json:"price_details,omitempty" db:"-"`
-	Photos         []AttractionPhoto `json:"attraction_photos,omitempty" db:"-"`
-	WeatherInfo    []Weather		 `json:"weather_info,omitempty" db:"-"`
-	MapsDetail     *MapsDetail       `json:"maps_detail,omitempty"`
-	CreatedAt      time.Time         `json:"created_at" db:"created_at"`
-	UpdatedAt      time.Time         `json:"updated_at" db:"updated_at"`
+	ID            	string 				`json:"id" db:"attraction_id"`
+	Name          	string 				`json:"name" db:"name"`
+	Category      	string 				`json:"category" db:"category"`
+	Description   	string 				`json:"description" db:"description"`
+	OpeningHours  	string 				`json:"opening_hours" db:"opening_hours"`
+	MapsEmbedUrl  	string 				`json:"maps_embed_url" db:"maps_embed_url"`
+	Location      	string 				`json:"location" db:"location"`
+	DistanceValue 	int64  				`json:"distance_value,omitempty" db:"-"`
+	OperationHours 	[]OperationHours  	`json:"operation_hours,omitempty" db:"-"`
+	PriceDetails   	[]PriceDetails    	`json:"price_details,omitempty" db:"-"`
+	Photos         	[]AttractionPhoto 	`json:"attraction_photos,omitempty" db:"-"`
+	WeatherInfo    	[]Weather         	`json:"weather_info,omitempty" db:"-"`
+	MapsDetail     	*MapsDetail       	`json:"maps_detail,omitempty"`
+	CreatedAt      	time.Time         	`json:"created_at" db:"created_at"`
+	UpdatedAt      	time.Time         	`json:"updated_at" db:"updated_at"`
 }
 
 type AttractionPayload struct {
@@ -48,7 +49,7 @@ type PriceDetails struct {
 	Price        int64  `json:"price" db:"price" binding:"required"`
 	DayType      string `json:"day_type,omitempty" db:"day_type"`
 	AgeGroup     string `json:"age_group,omitempty" db:"age_group"`
-	ParkType	 string `json:"park_type,omitempty" db:"park_type"`
+	ParkType     string `json:"park_type,omitempty" db:"park_type"`
 }
 
 type AttractionPhoto struct {
@@ -96,8 +97,8 @@ type PriceDetailsRepository interface {
 }
 
 type AttractionService interface {
-	FetchAll(ctx context.Context) ([]*Attraction, error)
-	FetchByID(ctx context.Context, id string) (*Attraction, error)
+	FetchAll(ctx context.Context, query *LocQuery) ([]*Attraction, error)
+	FetchByID(ctx context.Context, id string, query *LocQuery) (*Attraction, error)
 	InsertAttraction(ctx context.Context, attraction *AttractionPayload) error
 	UpdateAttraction(ctx context.Context, attraction *AttractionPayload) error
 	UploadPhotoByAttID(ctx context.Context, attPhoto *AttractionPhotoPayload) error
