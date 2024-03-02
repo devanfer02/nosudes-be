@@ -22,7 +22,7 @@ type Attraction struct {
 	OpeningHours  	string 				`json:"opening_hours" db:"opening_hours"`
 	MapsEmbedUrl  	string 				`json:"maps_embed_url" db:"maps_embed_url"`
 	Location      	string 				`json:"location" db:"location"`
-	DistanceValue 	int64  				`json:"distance_value,omitempty" db:"-"`
+	DistanceValue 	int64  				`json:"distance_value" db:"-"`
 	OperationHours 	[]OperationHours  	`json:"operation_hours,omitempty" db:"-"`
 	PriceDetails   	[]PriceDetails    	`json:"price_details,omitempty" db:"-"`
 	Photos         	[]AttractionPhoto 	`json:"attraction_photos,omitempty" db:"-"`
