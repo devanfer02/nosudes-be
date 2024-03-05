@@ -1,6 +1,6 @@
 .env
 todo.txt
-index.html
+./index.html
 key
 .VSCodeCounter
 node_modules

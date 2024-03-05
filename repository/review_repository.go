@@ -31,22 +31,17 @@ func (m *mysqlReviewRepository) fetch(ctx context.Context, query string, args ..
 	return reviews, err
 }
 
-func (m *mysqlReviewRepository) FetchAll(ctx context.Context) ([]*domain.Review, error) {
-	query := `SELECT * FROM reviews`
+func (m *mysqlReviewRepository) FetchAll(ctx context.Context, args ...interface{}) ([]*domain.Review, error) {
+	query := `SELECT r.*, 
+	CASE
+		WHEN rl.user_id IS NULL THEN 0
+		WHEN rl.user_id != ? THEN 0
+		ELSE 1
+	END AS liked
+	FROM reviews r 
+	LEFT JOIN review_likes rl ON r.review_id = rl.review_id`
 
-	reviews, err := m.fetch(ctx, query)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return reviews, nil
-}
-
-func (m *mysqlReviewRepository) FetchByAttrID(ctx context.Context, attractionId string) ([]*domain.Review, error) {
-	query := `SELECT * FROM reviews WHERE attraction_id = ?`
-
-	reviews, err := m.fetch(ctx, query, attractionId)
+	reviews, err := m.fetch(ctx, query, args...)
 
 	if err != nil {
 		return nil, err
@@ -55,10 +50,43 @@ func (m *mysqlReviewRepository) FetchByAttrID(ctx context.Context, attractionId 
 	return reviews, nil
 }
 
-func (m *mysqlReviewRepository) FetchByID(ctx context.Context, id string) (*domain.Review, error) {
-	query := `SELECT * FROM reviews WHERE review_id = ?`
+func (m *mysqlReviewRepository) FetchByAttrID(ctx context.Context, attractionId string, args ...interface{}) ([]*domain.Review, error) {
+	query := `SELECT r.*, 
+	CASE
+		WHEN rl.user_id IS NULL THEN 0
+		WHEN rl.user_id != ? THEN 0
+		ELSE 1
+	END AS liked
+	FROM reviews r 
+	LEFT JOIN review_likes rl ON r.review_id = rl.review_id
+	WHERE attraction_id = ?`
 
-	reviews, err := m.fetch(ctx, query, id)
+	args = append(args, attractionId)
+
+	reviews, err := m.fetch(ctx, query, args...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
+}
+
+func (m *mysqlReviewRepository) FetchByID(ctx context.Context, id string, args ...interface{}) (*domain.Review, error) {
+
+	query := `SELECT r.*, 
+	CASE
+		WHEN rl.user_id IS NULL THEN 0
+		WHEN rl.user_id != ? THEN 0
+		ELSE 1
+	END AS liked
+	FROM reviews r 
+	LEFT JOIN review_likes rl ON r.review_id = rl.review_id
+	WHERE r.review_id = ?`
+
+	args = append(args, id)
+
+	reviews, err := m.fetch(ctx, query, args...)
 
 	if err != nil {
 		return nil, err

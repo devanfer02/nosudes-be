@@ -88,8 +88,8 @@ func (r *router) setupArticleRoutes(ctr *controller.ArticleController) {
 
 func (r *router) setupAttractionRoutes(ctr *controller.AttractionController) {
 	aR := r.app.Group("/attractions")
-	aR.GET("", ctr.FetchAll)
-	aR.GET("/:id", ctr.FetchByID)
+	aR.GET("", r.mdlwr.OptAuth(),ctr.FetchAll)
+	aR.GET("/:id", r.mdlwr.OptAuth(),ctr.FetchByID)
 	aR.POST("", ctr.InsertAttraction)
 	aR.PUT("/:id", ctr.UpdateAttraction)
 	aR.POST("/:id", ctr.UploadAttractionPhoto)
@@ -103,9 +103,9 @@ func (r *router) setupAttractionRoutes(ctr *controller.AttractionController) {
 
 func (r *router) setupReviewRoutes(ctr *controller.ReviewController) {
 	rR := r.app.Group("/reviews")
-	rR.GET("", ctr.FetchAll)
-	rR.GET("/attractions/:attractionId", ctr.FetchByAttrID)
-	rR.GET("/:id", ctr.FetchByID)
+	rR.GET("", r.mdlwr.OptAuth(),ctr.FetchAll)
+	rR.GET("/attractions/:attractionId", r.mdlwr.OptAuth(), ctr.FetchByAttrID)
+	rR.GET("/:id", r.mdlwr.OptAuth(), ctr.FetchByID)
 	rR.POST("/:attractionId", r.mdlwr.Auth(), ctr.CreateReview)
 	rR.DELETE("/:id", r.mdlwr.Auth(), ctr.DeleteReview)
 

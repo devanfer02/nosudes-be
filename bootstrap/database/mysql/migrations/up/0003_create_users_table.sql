@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     username    VARCHAR(150) NOT NULL UNIQUE,
     email       VARCHAR(150) NOT NULL UNIQUE,
     password    VARCHAR(255) NOT NULL,
-    photo_url   VARCHAR(255),
+    photo_url   VARCHAR(255) DEFAULT '',
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) Engine = InnoDB

@@ -13,6 +13,7 @@ type Review struct {
 	AttractionID string     `json:"attraction_id" db:"attraction_id"`
 	UserID       string     `json:"user_id" db:"user_id"`
 	ReviewText   string     `json:"review_text" db:"review_text"`
+	Liked		 int		`json:"liked" db:"liked"`
 	PhotoURL     string     `json:"photo_url" db:"photo_url"`
 	DateCreated  string     `json:"date_created" db:"date_created"`
 	UserDetail   User       `json:"user_detail" db:"-"`
@@ -30,9 +31,9 @@ type ReviewPayload struct {
 }
 
 type ReviewRepository interface {
-	FetchAll(ctx context.Context) ([]*Review, error)
-	FetchByAttrID(ctx context.Context, attractionId string) ([]*Review, error)
-	FetchByID(ctx context.Context, id string) (*Review, error)
+	FetchAll(ctx context.Context, args ...interface{}) ([]*Review, error)
+	FetchByAttrID(ctx context.Context, attractionId string, args ...interface{}) ([]*Review, error)
+	FetchByID(ctx context.Context, id string, args ...interface{}) (*Review, error)
 	LikeReview(ctx context.Context, reviewId, userId string) error
 	UnlikeReview(ctx context.Context, reviewId, userId string) error 
 	InsertReview(ctx context.Context, review *ReviewPayload) error
@@ -40,9 +41,9 @@ type ReviewRepository interface {
 }
 
 type ReviewService interface {
-	FetchAll(ctx context.Context) ([]*Review, error)
-	FetchByAttrID(ctx context.Context, attractionId string) ([]*Review, error)
-	FetchByID(ctx context.Context, id string) (*Review, error)
+	FetchAll(ctx context.Context, args ...interface{}) ([]*Review, error)
+	FetchByAttrID(ctx context.Context, attractionId string, args ...interface{}) ([]*Review, error)
+	FetchByID(ctx context.Context, id string, args ...interface{}) (*Review, error)
 	LikeReview(ctx context.Context, reviewId, userId string) error
 	UnlikeReview(ctx context.Context, reviewId, userId string) error 
 	InsertReview(ctx context.Context, review *ReviewPayload) error

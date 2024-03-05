@@ -23,6 +23,7 @@ type Attraction struct {
 	MapsEmbedUrl  	string 				`json:"maps_embed_url" db:"maps_embed_url"`
 	Location      	string 				`json:"location" db:"location"`
 	DistanceValue 	int64  				`json:"distance_value" db:"-"`
+	Bookmarked		int 				`json:"bookmarked" db:"bookmarked"`
 	OperationHours 	[]OperationHours  	`json:"operation_hours,omitempty" db:"-"`
 	PriceDetails   	[]PriceDetails    	`json:"price_details,omitempty" db:"-"`
 	Photos         	[]AttractionPhoto 	`json:"attraction_photos,omitempty" db:"-"`
@@ -72,8 +73,8 @@ type OperationHours struct {
 }
 
 type AttractionRepository interface {
-	FetchAll(ctx context.Context) ([]*Attraction, error)
-	FetchByID(ctx context.Context, id string) (*Attraction, error)
+	FetchAll(ctx context.Context, args ...interface{}) ([]*Attraction, error)
+	FetchByID(ctx context.Context, args ...interface{}) (*Attraction, error)
 	InsertAttraction(ctx context.Context, attraction *AttractionPayload) error
 	UpdateAttraction(ctx context.Context, attraction *AttractionPayload) error
 	DeleteAttraction(ctx context.Context, id string) error
@@ -97,8 +98,8 @@ type PriceDetailsRepository interface {
 }
 
 type AttractionService interface {
-	FetchAll(ctx context.Context, query *LocQuery) ([]*Attraction, error)
-	FetchByID(ctx context.Context, id string, query *LocQuery) (*Attraction, error)
+	FetchAll(ctx context.Context, query *LocQuery, args ...interface{}) ([]*Attraction, error)
+	FetchByID(ctx context.Context, id string, query *LocQuery, args ...interface{}) (*Attraction, error)
 	InsertAttraction(ctx context.Context, attraction *AttractionPayload) error
 	UpdateAttraction(ctx context.Context, attraction *AttractionPayload) error
 	UploadPhotoByAttID(ctx context.Context, attPhoto *AttractionPhotoPayload) error

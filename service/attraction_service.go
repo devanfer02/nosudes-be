@@ -32,11 +32,11 @@ func NewAttractionSerivce(
 	return &attractionService{attrRepo, attrPhotoRepo, attrPriceRepo, opHourRepo, fileStore, timeout}
 }
 
-func (s *attractionService) FetchAll(ctx context.Context, query *domain.LocQuery) ([]*domain.Attraction, error) {
+func (s *attractionService) FetchAll(ctx context.Context, query *domain.LocQuery, args ...interface{}) ([]*domain.Attraction, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	attractions, err := s.attrRepo.FetchAll(c)
+	attractions, err := s.attrRepo.FetchAll(c, args...)
 
 	if err != nil {
 		return nil, err
@@ -68,11 +68,13 @@ func (s *attractionService) FetchAll(ctx context.Context, query *domain.LocQuery
 	return attractions, err
 }
 
-func (s *attractionService) FetchByID(ctx context.Context, id string, query *domain.LocQuery) (*domain.Attraction, error) {
+func (s *attractionService) FetchByID(ctx context.Context, id string, query *domain.LocQuery, args ...interface{}) (*domain.Attraction, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	attraction, err := s.attrRepo.FetchByID(c, id)
+	args = append(args, id)
+
+	attraction, err := s.attrRepo.FetchByID(c, args...)
 
 	if err != nil {
 		return nil, err

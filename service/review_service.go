@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/devanfer02/nosudes-be/domain"
 )
@@ -11,11 +11,11 @@ import (
 const REVIEWS_CLOUD_STORE_DIR = "reviews"
 
 type reviewService struct {
-	rvRepo domain.ReviewRepository
-	usrRepo domain.UserRepository
-	attrRepo domain.AttractionRepository
+	rvRepo    domain.ReviewRepository
+	usrRepo   domain.UserRepository
+	attrRepo  domain.AttractionRepository
 	fileStore domain.FileStorage
-	timeout time.Duration
+	timeout   time.Duration
 }
 
 func NewReviewService(
@@ -28,19 +28,18 @@ func NewReviewService(
 	return &reviewService{rvRepo, usrRepo, attrRepo, fileStore, timeout}
 }
 
-func(s *reviewService) FetchAll(ctx context.Context) ([]*domain.Review, error) {
+func (s *reviewService) FetchAll(ctx context.Context, args ...interface{}) ([]*domain.Review, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	reviews, err := s.rvRepo.FetchAll(c) 
+	reviews, err := s.rvRepo.FetchAll(c, args...)
 
 	if err != nil {
 		return nil, err
 	}
 
-	
-	var wg sync.WaitGroup 
-	errs := make(chan error, 2 * len(reviews))
+	var wg sync.WaitGroup
+	errs := make(chan error, 2*len(reviews))
 
 	for _, review := range reviews {
 		wg.Add(2)
@@ -49,7 +48,7 @@ func(s *reviewService) FetchAll(ctx context.Context) ([]*domain.Review, error) {
 			defer wg.Done()
 
 			userDetail, err := s.usrRepo.FetchOneByArg(c, "user_id", review.UserID)
-		
+
 			if err != nil {
 				errs <- err
 			}
@@ -60,17 +59,17 @@ func(s *reviewService) FetchAll(ctx context.Context) ([]*domain.Review, error) {
 		go func(review *domain.Review) {
 			defer wg.Done()
 			var attr *domain.Attraction
-		
-			attr, err = s.attrRepo.FetchByID(c, review.AttractionID)
-		
+
+			attr, err = s.attrRepo.FetchByID(c, "", review.AttractionID)
+
 			if err != nil {
-				errs <- err 
+				errs <- err
 			}
-		
+
 			review.AttrDetail = *attr
 		}(review)
 	}
-	
+
 	go func() {
 		wg.Wait()
 		close(errs)
@@ -78,26 +77,25 @@ func(s *reviewService) FetchAll(ctx context.Context) ([]*domain.Review, error) {
 
 	for err := range errs {
 		if err != nil {
-			return nil, err 
+			return nil, err
 		}
 	}
-
 
 	return reviews, nil
 }
 
-func(s *reviewService) FetchByAttrID(ctx context.Context, attractionId string) ([]*domain.Review, error) {
+func (s *reviewService) FetchByAttrID(ctx context.Context, attractionId string, args ...interface{}) ([]*domain.Review, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	reviews, err := s.rvRepo.FetchByAttrID(c, attractionId) 
+	reviews, err := s.rvRepo.FetchByAttrID(c, attractionId, args...)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var wg sync.WaitGroup 
-	errs := make(chan error, 2 * len(reviews))
+	var wg sync.WaitGroup
+	errs := make(chan error, 2*len(reviews))
 
 	for _, review := range reviews {
 		wg.Add(2)
@@ -106,7 +104,7 @@ func(s *reviewService) FetchByAttrID(ctx context.Context, attractionId string) (
 			defer wg.Done()
 
 			userDetail, err := s.usrRepo.FetchOneByArg(c, "user_id", review.UserID)
-		
+
 			if err != nil {
 				errs <- err
 			}
@@ -117,17 +115,17 @@ func(s *reviewService) FetchByAttrID(ctx context.Context, attractionId string) (
 		go func(review *domain.Review) {
 			defer wg.Done()
 			var attr *domain.Attraction
-		
-			attr, err = s.attrRepo.FetchByID(c, review.AttractionID)
-		
+
+			attr, err = s.attrRepo.FetchByID(c, "", review.AttractionID)
+
 			if err != nil {
-				errs <- err 
+				errs <- err
 			}
-		
+
 			review.AttrDetail = *attr
 		}(review)
 	}
-	
+
 	go func() {
 		wg.Wait()
 		close(errs)
@@ -135,25 +133,24 @@ func(s *reviewService) FetchByAttrID(ctx context.Context, attractionId string) (
 
 	for err := range errs {
 		if err != nil {
-			return nil, err 
+			return nil, err
 		}
 	}
-
 
 	return reviews, nil
 
 }
-func(s *reviewService) FetchByID(ctx context.Context, id string) (*domain.Review, error) {
+func (s *reviewService) FetchByID(ctx context.Context, id string, args ...interface{}) (*domain.Review, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	review, err := s.rvRepo.FetchByID(c, id) 
+	review, err := s.rvRepo.FetchByID(c, id, args...)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var wg sync.WaitGroup 
+	var wg sync.WaitGroup
 	errs := make(chan error, 2)
 	wg.Add(2)
 
@@ -161,7 +158,7 @@ func(s *reviewService) FetchByID(ctx context.Context, id string) (*domain.Review
 		defer wg.Done()
 
 		userDetail, err := s.usrRepo.FetchOneByArg(c, "user_id", review.UserID)
-	
+
 		if err != nil {
 			errs <- err
 		}
@@ -172,13 +169,13 @@ func(s *reviewService) FetchByID(ctx context.Context, id string) (*domain.Review
 	go func() {
 		defer wg.Done()
 		var attr *domain.Attraction
-	
-		attr, err = s.attrRepo.FetchByID(c, review.AttractionID)
-	
+
+		attr, err = s.attrRepo.FetchByID(c, "", review.AttractionID)
+
 		if err != nil {
-			errs <- err 
+			errs <- err
 		}
-	
+
 		review.AttrDetail = *attr
 	}()
 
@@ -189,14 +186,14 @@ func(s *reviewService) FetchByID(ctx context.Context, id string) (*domain.Review
 
 	for err := range errs {
 		if err != nil {
-			return nil, err 
+			return nil, err
 		}
 	}
 
 	return review, nil
 }
 
-func(s *reviewService) InsertReview(ctx context.Context, review *domain.ReviewPayload) error {
+func (s *reviewService) InsertReview(ctx context.Context, review *domain.ReviewPayload) error {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -227,27 +224,26 @@ func (s *reviewService) LikeReview(ctx context.Context, reviewId, userId string)
 
 	err = s.rvRepo.LikeReview(c, reviewId, userId)
 
-	return err 
+	return err
 }
 
-func (s *reviewService) UnlikeReview(ctx context.Context, reviewId, userId string) error  {
+func (s *reviewService) UnlikeReview(ctx context.Context, reviewId, userId string) error {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
 	err := s.rvRepo.UnlikeReview(c, reviewId, userId)
 
-	return err 
+	return err
 }
 
-
-func(s *reviewService) DeleteReview(ctx context.Context, reviewId, userId string) error {
+func (s *reviewService) DeleteReview(ctx context.Context, reviewId, userId string) error {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
 	review, err := s.rvRepo.FetchByID(c, reviewId)
 
 	if err != nil {
-		return err 
+		return err
 	}
 
 	if review.UserID != userId {

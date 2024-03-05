@@ -85,7 +85,7 @@ func (s *bookmarkService) InsertBookmark(ctx context.Context, userId, attraction
 	go func() {
 		defer wg.Done()
 
-		_, err := s.attrRepo.FetchByID(ctx, attractionId)
+		_, err := s.attrRepo.FetchByID(ctx, userId, attractionId)
 
 		if err != nil {
 			errs <- err
